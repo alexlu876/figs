@@ -138,6 +138,28 @@ for (let i = 0; i < EDGE_COUNT; i++) {
 	leaves.push({ x, y, r, s, shade });
 }
 
+// Bottom-arc edge-accent pass (iter-4): the iter-3 edge pass focused on
+// the upper + outer hull; the bottom of the canopy still read as a uniform
+// green mass. Add 12 oversized leaves along angles 60..120 whose tips point
+// down-outward so palmate lobes protrude below the canopy too.
+const BOTTOM_EDGE_COUNT = 12;
+for (let i = 0; i < BOTTOM_EDGE_COUNT; i++) {
+	const t = i / (BOTTOM_EDGE_COUNT - 1);
+	const angDeg = 62 + t * 58 + (rand() - 0.5) * 6; // 62..120
+	const ang = (angDeg * Math.PI) / 180;
+	// Slightly wider hull down there so lobes clear the interior mass
+	const rx = 280 - Math.abs(90 - angDeg) * 1.4;
+	const ry = 240 + (rand() - 0.5) * 10;
+	const pushOut = 1.0 + rand() * 0.08;
+	const x = canopyCx + Math.cos(ang) * rx * pushOut;
+	const y = canopyCy + Math.sin(ang) * ry * pushOut;
+	// Rotate so the leaf tip points radially outward (down-outward)
+	const r = angDeg + 90 + (rand() - 0.5) * 16;
+	const s = 1.6 + rand() * 0.4;
+	const shade = (i % 2 === 0 ? 2 : 1) as 0 | 1 | 2;
+	leaves.push({ x, y, r, s, shade });
+}
+
 // A couple of loose leaves trailing below the canopy, softening the hard
 // edge where the lowest cluster meets the trunk (verifier nice-to-have).
 const trailingLeaves: { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 }[] = [
@@ -515,12 +537,23 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 				<ellipse cx="1218" cy="456" rx="8" ry="11" />
 				<rect x="1216" y="462" width="3" height="8" fill="#3d4e35" />
 			</g>
-			<!-- Farmhouse hints: two small muted structures on the far hill -->
-			<g opacity="0.8">
-				<rect x="860" y="458" width="14" height="10" fill="#b9a990" />
-				<path d="M 858 458 L 867 450 L 876 458 Z" fill="#8a6e58" />
-				<rect x="1088" y="466" width="10" height="8" fill="#a89683" />
-				<path d="M 1086 466 L 1093 460 L 1100 466 Z" fill="#7a614e" />
+			<!-- Farmhouse hints: two small muted structures on the far hill.
+			     Enlarged (20x14 / 16x11) with darker pitched roofs + a tiny
+			     chimney so they read as "farmhouse" at thumbnail scale, not
+			     as stray pink specks (iter-3 verifier feedback). -->
+			<g opacity="0.85">
+				<!-- house 1 -->
+				<rect x="858" y="454" width="20" height="14" fill="#c9b8a0" stroke="#5a4434" stroke-width="0.6" />
+				<path d="M 855 454 L 868 444 L 881 454 Z" fill="#7a5c48" stroke="#4a3628" stroke-width="0.6" stroke-linejoin="round" />
+				<!-- chimney -->
+				<rect x="874" y="446" width="2.6" height="4" fill="#5a4434" />
+				<!-- door -->
+				<rect x="866" y="461" width="3.5" height="7" fill="#5a4434" />
+				<!-- house 2 -->
+				<rect x="1084" y="462" width="16" height="11" fill="#bba991" stroke="#4a3628" stroke-width="0.6" />
+				<path d="M 1082 462 L 1092 454 L 1102 462 Z" fill="#6a4f3c" stroke="#3e2b1f" stroke-width="0.6" stroke-linejoin="round" />
+				<rect x="1098" y="455" width="2.2" height="3.2" fill="#4a3628" />
+				<rect x="1090" y="466" width="3" height="6" fill="#4a3628" />
 			</g>
 			<!-- Sage vegetation dabs on the mid hills (softer than tree silhouettes) -->
 			<g fill="#7a9168" opacity="0.45">

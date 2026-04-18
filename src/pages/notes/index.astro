@@ -10,60 +10,202 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
 <Base title="notes · figtre.es">
-	<main>
-		<header>
-			<a href="/">figtre.es</a>
-			<h1>notes</h1>
-		</header>
-		<ul>
-			{notes.map((n) => (
-				<li>
-					<a href={`/notes/${n.id}`}>{n.data.title}</a>
-					<time datetime={n.data.date.toISOString()}>{fmt(n.data.date)}</time>
-				</li>
-			))}
-		</ul>
-	</main>
+	<div class="page">
+		<article class="window" aria-labelledby="notes-title">
+			<header class="titlebar">
+				<span class="rule" aria-hidden="true"></span>
+				<span class="title" id="notes-title">
+					<svg class="leaf" viewBox="-40 -40 80 80" width="16" height="16" aria-hidden="true">
+						<path
+							d="M 0 -34
+							   C 8 -30, 14 -22, 16 -12
+							   C 24 -14, 30 -8, 28 0
+							   C 34 4, 32 14, 22 16
+							   C 20 24, 10 28, 2 22
+							   C -2 30, -14 28, -16 18
+							   C -26 18, -30 8, -24 0
+							   C -30 -6, -28 -18, -18 -18
+							   C -14 -28, -6 -32, 0 -34 Z"
+							fill="#577043"
+							stroke="#2a3b20"
+							stroke-width="1"
+							stroke-linejoin="round"
+						/>
+						<path
+							d="M 0 -30 L 0 22 M 0 -6 L -14 8 M 0 -6 L 14 8 M 0 8 L -10 20 M 0 8 L 10 20"
+							stroke="#2a3b20"
+							stroke-width="0.8"
+							fill="none"
+							stroke-linecap="round"
+							opacity="0.55"
+						/>
+					</svg>
+					<em>notes</em>
+				</span>
+				<span class="rule" aria-hidden="true"></span>
+			</header>
+
+			<section class="body">
+				<p class="lede">
+					Short entries. Planted and watered here as they come.
+				</p>
+
+				{notes.length === 0 ? (
+					<p class="empty">Nothing here yet — come back soon.</p>
+				) : (
+					<ul>
+						{notes.map((n) => (
+							<li>
+								<a href={`/notes/${n.id}`}>
+									<span class="marker" aria-hidden="true">§</span>
+									<span class="entry-title">{n.data.title}</span>
+								</a>
+								<time datetime={n.data.date.toISOString()}>{fmt(n.data.date)}</time>
+							</li>
+						))}
+					</ul>
+				)}
+			</section>
+
+			<footer class="foot">
+				<a class="back" href="/">← back to the tree</a>
+			</footer>
+		</article>
+	</div>
 </Base>
 
 <style>
-	main {
-		max-width: 36rem;
-		margin: 0 auto;
-		padding: 4rem 2rem;
+	.page {
+		min-height: 100vh;
+		padding: 4rem 1.5rem 5rem;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		background:
+			radial-gradient(1100px 700px at 50% -10%, #afc4d2 0%, #c4d1cf 45%, #d6dcd6 80%, #dfe2d5 100%),
+			#dfe2d5;
+		background-attachment: fixed;
+		position: relative;
 	}
-	header a {
-		opacity: 0.6;
-		text-decoration: none;
-		font-size: 0.9rem;
+	.page::before {
+		/* very subtle noise/paper tooth */
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.25;
+		background-image:
+			radial-gradient(rgba(30, 30, 30, 0.05) 1px, transparent 1px),
+			radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+		background-size: 3px 3px, 4px 4px;
+		background-position: 0 0, 1px 2px;
+		mix-blend-mode: multiply;
 	}
-	h1 {
-		font-size: 2.5rem;
-		font-weight: 400;
-		letter-spacing: -0.02em;
-		margin: 1rem 0 2rem;
+
+	.window {
+		position: relative;
+		width: min(92vw, 640px);
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+		color: #1f1f1f;
 	}
+
+	.titlebar {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem 0.75rem;
+		border-bottom: 1px solid #1f1f1f;
+	}
+	.rule {
+		flex: 1;
+		height: 5px;
+		border-top: 1px solid #1f1f1f;
+		border-bottom: 1px solid #1f1f1f;
+	}
+	.title {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-style: italic;
+		font-size: 1.05rem;
+		white-space: nowrap;
+	}
+	.title .leaf { display: block; }
+
+	.body {
+		padding: 1.75rem 2rem 1.25rem;
+	}
+	.lede {
+		margin: 0 0 1.25rem;
+		font-style: italic;
+		color: #4a4a42;
+		font-size: 0.98rem;
+	}
+	.empty {
+		margin: 0;
+		color: #4a4a42;
+		font-style: italic;
+	}
+
 	ul {
 		list-style: none;
 		padding: 0;
 		margin: 0;
+		border-top: 1px solid rgba(31, 31, 31, 0.25);
 	}
 	li {
 		display: flex;
 		justify-content: space-between;
+		align-items: baseline;
 		gap: 1rem;
 		padding: 0.75rem 0;
-		border-bottom: 1px solid rgba(245, 245, 240, 0.1);
+		border-bottom: 1px dashed rgba(31, 31, 31, 0.22);
 	}
 	li a {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.5rem;
 		text-decoration: none;
+		color: #1f1f1f;
 	}
-	li a:hover {
-		text-decoration: underline;
+	li a:hover .entry-title { text-decoration: underline; }
+	.marker {
+		color: #5a2d42;
+		font-style: italic;
+		opacity: 0.75;
+	}
+	.entry-title {
+		font-size: 1.05rem;
 	}
 	time {
-		opacity: 0.5;
-		font-size: 0.9rem;
+		color: #4a4a42;
+		font-size: 0.88rem;
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.foot {
+		border-top: 1px solid #1f1f1f;
+		padding: 0.75rem 1rem;
+		display: flex;
+		justify-content: center;
+	}
+	.back {
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		padding: 0.35rem 1.5rem;
+		font-family: inherit;
+		font-style: italic;
+		font-size: 0.95rem;
+		color: #1f1f1f;
+		text-decoration: none;
+	}
+	.back:hover { background: #dcd5c4; }
+
+	@media (max-width: 640px) {
+		.page { padding: 2rem 1rem 3rem; }
+		.body { padding: 1.25rem 1.25rem 1rem; }
 	}
 </style>

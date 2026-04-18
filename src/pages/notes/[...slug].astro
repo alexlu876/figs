@@ -16,46 +16,203 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
 <Base title={`${entry.data.title} · figtre.es`} description={entry.data.description}>
-	<main>
-		<header>
-			<a href="/notes">← notes</a>
-		</header>
-		<article>
-			<h1>{entry.data.title}</h1>
-			<time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time>
-			<Content />
+	<div class="page">
+		<article class="window" aria-labelledby="entry-title">
+			<header class="titlebar">
+				<span class="rule" aria-hidden="true"></span>
+				<span class="title" id="entry-title">
+					<svg class="leaf" viewBox="-40 -40 80 80" width="16" height="16" aria-hidden="true">
+						<path
+							d="M 0 -34
+							   C 8 -30, 14 -22, 16 -12
+							   C 24 -14, 30 -8, 28 0
+							   C 34 4, 32 14, 22 16
+							   C 20 24, 10 28, 2 22
+							   C -2 30, -14 28, -16 18
+							   C -26 18, -30 8, -24 0
+							   C -30 -6, -28 -18, -18 -18
+							   C -14 -28, -6 -32, 0 -34 Z"
+							fill="#577043"
+							stroke="#2a3b20"
+							stroke-width="1"
+							stroke-linejoin="round"
+						/>
+					</svg>
+					<em>{entry.data.title}</em>
+				</span>
+				<span class="rule" aria-hidden="true"></span>
+			</header>
+
+			<section class="body">
+				<p class="meta">
+					<time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time>
+				</p>
+				<div class="prose">
+					<Content />
+				</div>
+			</section>
+
+			<footer class="foot">
+				<a class="back" href="/notes">← all notes</a>
+				<a class="back" href="/">home</a>
+			</footer>
 		</article>
-	</main>
+	</div>
 </Base>
 
 <style>
-	main {
-		max-width: 36rem;
-		margin: 0 auto;
-		padding: 4rem 2rem;
+	.page {
+		min-height: 100vh;
+		padding: 4rem 1.5rem 5rem;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		background:
+			radial-gradient(1100px 700px at 50% -10%, #afc4d2 0%, #c4d1cf 45%, #d6dcd6 80%, #dfe2d5 100%),
+			#dfe2d5;
+		background-attachment: fixed;
+		position: relative;
 	}
-	header a {
-		opacity: 0.6;
-		text-decoration: none;
-		font-size: 0.9rem;
+	.page::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.25;
+		background-image:
+			radial-gradient(rgba(30, 30, 30, 0.05) 1px, transparent 1px),
+			radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+		background-size: 3px 3px, 4px 4px;
+		background-position: 0 0, 1px 2px;
+		mix-blend-mode: multiply;
 	}
-	h1 {
-		font-size: 2.5rem;
-		font-weight: 400;
-		letter-spacing: -0.02em;
-		margin: 2rem 0 0.25rem;
+
+	.window {
+		position: relative;
+		width: min(92vw, 640px);
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+		color: #1f1f1f;
 	}
-	time {
-		opacity: 0.5;
-		font-size: 0.9rem;
+
+	.titlebar {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem 0.75rem;
+		border-bottom: 1px solid #1f1f1f;
+	}
+	.rule {
+		flex: 1;
+		height: 5px;
+		border-top: 1px solid #1f1f1f;
+		border-bottom: 1px solid #1f1f1f;
+	}
+	.title {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-style: italic;
+		font-size: 1.05rem;
+		white-space: nowrap;
+		max-width: 60%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.title em { overflow: hidden; text-overflow: ellipsis; }
+
+	.body {
+		padding: 1.5rem 2rem 1.25rem;
+	}
+	.meta {
+		margin: 0 0 1rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px dashed rgba(31, 31, 31, 0.22);
+		color: #4a4a42;
+		font-size: 0.88rem;
 		font-variant-numeric: tabular-nums;
+		font-style: italic;
 	}
-	article :global(p) {
-		line-height: 1.7;
-		margin: 1.25rem 0;
+
+	.prose { font-size: 1rem; line-height: 1.7; }
+	.prose :global(h1) {
+		font-size: 1.6rem;
+		font-weight: 400;
+		font-style: italic;
+		margin: 1.5rem 0 0.75rem;
 	}
-	article :global(a) {
+	.prose :global(h2) {
+		font-size: 1.25rem;
+		font-weight: 400;
+		font-style: italic;
+		margin: 1.4rem 0 0.5rem;
+		border-bottom: 1px solid rgba(31, 31, 31, 0.18);
+		padding-bottom: 0.25rem;
+	}
+	.prose :global(h3) {
+		font-size: 1.1rem;
+		font-weight: 400;
+		font-style: italic;
+		margin: 1.2rem 0 0.4rem;
+	}
+	.prose :global(p) { margin: 0.9rem 0; }
+	.prose :global(a) {
+		color: #3a5070;
 		text-decoration: underline;
 		text-underline-offset: 3px;
+	}
+	.prose :global(blockquote) {
+		margin: 1rem 0;
+		padding: 0.25rem 1rem;
+		border-left: 3px solid #5e7550;
+		color: #3b3b36;
+		font-style: italic;
+	}
+	.prose :global(code) {
+		background: #dfdac8;
+		padding: 0.05rem 0.3rem;
+		border-radius: 2px;
+		font-size: 0.92em;
+	}
+	.prose :global(pre) {
+		background: #e3ddc7;
+		border: 1px solid #c6bfa4;
+		padding: 0.75rem 1rem;
+		overflow-x: auto;
+		font-size: 0.9rem;
+		line-height: 1.5;
+	}
+	.prose :global(pre code) { background: transparent; padding: 0; }
+	.prose :global(ul), .prose :global(ol) { padding-left: 1.4rem; }
+	.prose :global(li) { margin: 0.35rem 0; }
+	.prose :global(hr) {
+		border: none;
+		border-top: 1px solid rgba(31, 31, 31, 0.2);
+		margin: 1.5rem 0;
+	}
+
+	.foot {
+		border-top: 1px solid #1f1f1f;
+		padding: 0.75rem 1rem;
+		display: flex;
+		justify-content: center;
+		gap: 0.75rem;
+	}
+	.back {
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		padding: 0.35rem 1.25rem;
+		font-family: inherit;
+		font-style: italic;
+		font-size: 0.95rem;
+		color: #1f1f1f;
+		text-decoration: none;
+	}
+	.back:hover { background: #dcd5c4; }
+
+	@media (max-width: 640px) {
+		.page { padding: 2rem 1rem 3rem; }
+		.body { padding: 1.25rem 1.25rem 1rem; }
 	}
 </style>
