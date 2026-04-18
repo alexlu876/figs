@@ -1,0 +1,122 @@
+---
+interface Props {
+	id: string;
+	title: string;
+	x?: number;
+	y?: number;
+	ackLabel?: string;
+}
+
+const { id, title, x = 60, y = 80, ackLabel } = Astro.props;
+---
+
+<aside
+	class="window"
+	id={`window-${id}`}
+	data-window-id={id}
+	style={`left: ${x}px; top: ${y}px;`}
+	hidden
+>
+	<header class="titlebar" data-drag-handle>
+		<span class="rule"></span>
+		<span class="title">{title}</span>
+		<span class="rule"></span>
+		<button class="close" type="button" aria-label="Close" data-close>×</button>
+	</header>
+	<div class="body">
+		<slot />
+	</div>
+	{ackLabel && (
+		<footer class="footer">
+			<button class="ack" type="button" data-close>{ackLabel}</button>
+		</footer>
+	)}
+</aside>
+
+<style>
+	.window {
+		position: absolute;
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
+		min-width: 280px;
+		max-width: min(90vw, 480px);
+		z-index: 10;
+		color: #1f1f1f;
+		font-family: ui-serif, Georgia, serif;
+	}
+	.window[hidden] { display: none; }
+	.titlebar {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.5rem;
+		border-bottom: 1px solid #1f1f1f;
+		cursor: grab;
+		user-select: none;
+	}
+	.titlebar:active { cursor: grabbing; }
+	.rule {
+		flex: 1;
+		height: 5px;
+		border-top: 1px solid #1f1f1f;
+		border-bottom: 1px solid #1f1f1f;
+	}
+	.title {
+		font-style: italic;
+		font-size: 0.95rem;
+		white-space: nowrap;
+	}
+	.close {
+		width: 22px;
+		height: 22px;
+		display: grid;
+		place-items: center;
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		font-family: inherit;
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		padding: 0;
+		color: inherit;
+	}
+	.close:hover { background: #dcd5c4; }
+	.body {
+		padding: 1.5rem 1.75rem;
+		line-height: 1.65;
+		font-size: 1rem;
+	}
+	.body :global(p) { margin: 0.5em 0; }
+	.body :global(a) {
+		color: #3a5070;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.footer {
+		border-top: 1px solid #1f1f1f;
+		padding: 0.75rem;
+		display: grid;
+		place-items: center;
+	}
+	.ack {
+		background: #ede8dc;
+		border: 1px solid #1f1f1f;
+		font-family: inherit;
+		padding: 0.35rem 2rem;
+		font-size: 0.95rem;
+		cursor: pointer;
+		color: inherit;
+	}
+	.ack:hover { background: #dcd5c4; }
+
+	@media (max-width: 640px) {
+		.window {
+			left: 1rem !important;
+			right: 1rem !important;
+			top: 5rem !important;
+			max-width: none;
+			width: auto;
+		}
+	}
+</style>

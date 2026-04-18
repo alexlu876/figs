@@ -1,31 +1,250 @@
 ---
 import Base from '../layouts/Base.astro';
+import RetroWindow from '../components/RetroWindow.astro';
 ---
 
 <Base>
-	<main>
-		<h1>figtre.es</h1>
-		<p>Something is growing here.</p>
-	</main>
+	<div class="wordmark">figtre.es</div>
+
+	<div class="scene" id="scene">
+		<svg
+			class="landscape"
+			viewBox="0 0 1200 700"
+			preserveAspectRatio="xMinYMid slice"
+			role="img"
+			aria-labelledby="sceneDesc"
+		>
+			<desc id="sceneDesc">
+				A fig tree on the left. Someone sits beneath it, looking over a field of green hills under a muted blue sky. Figs and leaves are interactive.
+			</desc>
+
+			<defs>
+				<linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0" stop-color="#b8cfdc" />
+					<stop offset="1" stop-color="#d8dcd0" />
+				</linearGradient>
+				<linearGradient id="field" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0" stop-color="#a6b88c" />
+					<stop offset="1" stop-color="#7d9168" />
+				</linearGradient>
+			</defs>
+
+			<!-- Sky + field -->
+			<rect width="1200" height="420" fill="url(#sky)" />
+			<rect y="420" width="1200" height="280" fill="url(#field)" />
+
+			<!-- Distant hills -->
+			<path d="M0,435 Q180,410 360,425 T720,430 T1200,420 L1200,460 L0,460 Z" fill="#8fa375" opacity="0.7" />
+			<path d="M0,470 Q240,450 480,460 T960,465 T1200,455 L1200,485 L0,485 Z" fill="#849968" opacity="0.85" />
+
+			<!-- Clouds -->
+			<g fill="#e4e8dc" opacity="0.7">
+				<ellipse cx="600" cy="120" rx="60" ry="14" />
+				<ellipse cx="640" cy="110" rx="40" ry="12" />
+				<ellipse cx="900" cy="180" rx="50" ry="11" />
+				<ellipse cx="400" cy="80" rx="35" ry="9" />
+			</g>
+
+			<!-- Tree trunk -->
+			<path d="M170 420 C 165 320, 155 240, 180 180 L 218 180 C 232 240, 228 320, 220 420 Z" fill="#4a3628" />
+			<!-- Trunk texture hint -->
+			<path d="M183 410 C 181 320, 178 240, 188 200" stroke="#2e2218" stroke-width="1.5" fill="none" opacity="0.5" />
+
+			<!-- Branches -->
+			<path d="M198 250 Q 265 220, 325 195" stroke="#4a3628" stroke-width="7" fill="none" stroke-linecap="round" />
+			<path d="M200 210 Q 160 195, 105 175" stroke="#4a3628" stroke-width="6" fill="none" stroke-linecap="round" />
+			<path d="M205 290 Q 275 280, 335 260" stroke="#4a3628" stroke-width="5" fill="none" stroke-linecap="round" />
+
+			<!-- Foliage clusters (background) -->
+			<ellipse cx="200" cy="190" rx="135" ry="95" fill="#3e5538" />
+			<ellipse cx="120" cy="210" rx="85" ry="70" fill="#455f3f" />
+			<ellipse cx="295" cy="215" rx="95" ry="75" fill="#3e5538" />
+			<ellipse cx="245" cy="140" rx="95" ry="60" fill="#4a6644" />
+
+			<!-- Figure: seated at trunk base, back against tree, looking right -->
+			<g transform="translate(225, 395)">
+				<!-- ground shadow -->
+				<ellipse cx="25" cy="28" rx="55" ry="5" fill="#5a6a48" opacity="0.35" />
+				<g fill="#2a2620">
+					<!-- torso -->
+					<path d="M-6 -12 Q -10 2, -2 18 Q 10 22, 18 16 Q 22 -2, 18 -14 Q 8 -22, -6 -12 Z" />
+					<!-- head -->
+					<circle cx="6" cy="-26" r="10" />
+					<!-- legs extended forward-right -->
+					<path d="M 10 12 Q 35 14, 58 22 Q 62 28, 56 30 Q 30 26, 6 20 Z" />
+					<!-- arm resting on knee -->
+					<path d="M 16 -4 Q 32 6, 42 18 Q 40 22, 36 20 Q 20 10, 12 0 Z" />
+				</g>
+			</g>
+
+			<!-- Clickable leaves -->
+			<g class="leaves">
+				<g class="hotspot" data-window="notes" transform="translate(335 180) rotate(25)">
+					<path
+						d="M 0 0 C -2 -5, -8 -8, -15 -12 C -28 -18, -35 -30, -30 -42 C -22 -48, -15 -46, -8 -38 C -10 -48, -5 -55, 0 -58 C 5 -55, 10 -48, 8 -38 C 15 -46, 22 -48, 30 -42 C 35 -30, 28 -18, 15 -12 C 8 -8, 2 -5, 0 0 Z"
+						fill="#6b8a4a"
+					/>
+					<path
+						d="M 0 0 L 0 -45 M 0 -25 L -12 -32 M 0 -25 L 12 -32"
+						stroke="#3e5528"
+						stroke-width="1"
+						fill="none"
+						opacity="0.6"
+					/>
+				</g>
+				<g class="hotspot" data-window="contact" transform="translate(95 185) rotate(-35) scale(0.9)">
+					<path
+						d="M 0 0 C -2 -5, -8 -8, -15 -12 C -28 -18, -35 -30, -30 -42 C -22 -48, -15 -46, -8 -38 C -10 -48, -5 -55, 0 -58 C 5 -55, 10 -48, 8 -38 C 15 -46, 22 -48, 30 -42 C 35 -30, 28 -18, 15 -12 C 8 -8, 2 -5, 0 0 Z"
+						fill="#6b8a4a"
+					/>
+					<path
+						d="M 0 0 L 0 -45 M 0 -25 L -12 -32 M 0 -25 L 12 -32"
+						stroke="#3e5528"
+						stroke-width="1"
+						fill="none"
+						opacity="0.6"
+					/>
+				</g>
+			</g>
+
+			<!-- Clickable figs -->
+			<g class="figs">
+				<g class="hotspot" data-window="about">
+					<path d="M 260 170 Q 258 164, 253 163" stroke="#2e2218" stroke-width="1.5" fill="none" />
+					<path d="M 248 180 Q 253 176, 260 176 Q 268 176, 272 180 Q 272 192, 268 198 Q 260 206, 252 198 Q 248 192, 248 180 Z" fill="#6b3a4a" />
+					<path d="M 256 183 Q 260 185, 264 183" stroke="#3a1f2a" stroke-width="1" fill="none" opacity="0.6" />
+				</g>
+				<g class="hotspot" data-window="projects">
+					<path d="M 180 228 Q 178 222, 173 221" stroke="#2e2218" stroke-width="1.5" fill="none" />
+					<path d="M 168 238 Q 173 234, 180 234 Q 188 234, 192 238 Q 192 250, 188 256 Q 180 264, 172 256 Q 168 250, 168 238 Z" fill="#7a4456" />
+					<path d="M 176 241 Q 180 243, 184 241" stroke="#3a1f2a" stroke-width="1" fill="none" opacity="0.6" />
+				</g>
+				<g class="hotspot" data-window="now">
+					<path d="M 300 253 Q 298 247, 293 246" stroke="#2e2218" stroke-width="1.5" fill="none" />
+					<path d="M 288 263 Q 293 259, 300 259 Q 308 259, 312 263 Q 312 275, 308 281 Q 300 289, 292 281 Q 288 275, 288 263 Z" fill="#5f3340" />
+					<path d="M 296 266 Q 300 268, 304 266" stroke="#3a1f2a" stroke-width="1" fill="none" opacity="0.6" />
+				</g>
+			</g>
+		</svg>
+
+		<!-- Windows -->
+		<RetroWindow id="about" title="about" x={440} y={90} ackLabel="Ack">
+			<p><em>figtre.es</em></p>
+			<p>A personal corner of the web, tended by Alex. Fig-themed because the fig trees in the backyard are louder than they seem.</p>
+		</RetroWindow>
+
+		<RetroWindow id="notes" title="notes" x={500} y={160} ackLabel="Ack">
+			<p>Short entries, planted as they come.</p>
+			<p><a href="/notes">open /notes →</a></p>
+		</RetroWindow>
+
+		<RetroWindow id="projects" title="projects" x={560} y={230} ackLabel="Ack">
+			<p>Things I'm growing.</p>
+			<p><em>More soon.</em></p>
+		</RetroWindow>
+
+		<RetroWindow id="contact" title="contact" x={620} y={300} ackLabel="Ack">
+			<p>Reach out.</p>
+			<p><a href="mailto:alexlu876@gmail.com">alexlu876@gmail.com</a></p>
+		</RetroWindow>
+
+		<RetroWindow id="now" title="now" x={680} y={370} ackLabel="Ack">
+			<p>Planting seeds. Watering the fig tree. Writing things down.</p>
+		</RetroWindow>
+	</div>
 </Base>
 
 <style>
-	main {
-		min-height: 100vh;
-		display: grid;
-		place-items: center;
-		text-align: center;
-		padding: 2rem;
+	.wordmark {
+		position: fixed;
+		top: 1.25rem;
+		left: 1.5rem;
+		font-family: ui-serif, Georgia, serif;
+		font-size: 1.15rem;
+		font-style: italic;
+		z-index: 100;
+		color: #1f1f1f;
+		opacity: 0.75;
+		pointer-events: none;
+		letter-spacing: 0.02em;
 	}
-	h1 {
-		font-size: clamp(3rem, 10vw, 6rem);
-		margin: 0;
-		font-weight: 400;
-		letter-spacing: -0.03em;
+	.scene {
+		position: relative;
+		width: 100vw;
+		height: 100vh;
+		overflow: hidden;
 	}
-	p {
-		opacity: 0.6;
-		font-size: 1.1rem;
-		margin-top: 1rem;
+	.landscape {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+	.hotspot {
+		cursor: pointer;
+		transition: filter 140ms ease, transform 140ms ease;
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+	.hotspot:hover {
+		filter: brightness(1.15) drop-shadow(0 0 6px rgba(255, 240, 200, 0.65));
 	}
 </style>
+
+<script>
+	const scene = document.getElementById('scene');
+	if (scene) {
+		let topZ = 10;
+
+		const bringToFront = (el: HTMLElement) => {
+			topZ += 1;
+			el.style.zIndex = String(topZ);
+		};
+
+		scene.querySelectorAll<SVGElement>('.hotspot').forEach((el) => {
+			el.addEventListener('click', () => {
+				const id = (el as SVGElement & { dataset: DOMStringMap }).dataset.window;
+				if (!id) return;
+				const win = document.getElementById(`window-${id}`) as HTMLElement | null;
+				if (!win) return;
+				win.hidden = false;
+				bringToFront(win);
+			});
+		});
+
+		scene.querySelectorAll<HTMLElement>('.window').forEach((win) => {
+			win.addEventListener('mousedown', () => bringToFront(win));
+
+			win.querySelectorAll<HTMLButtonElement>('[data-close]').forEach((btn) => {
+				btn.addEventListener('click', () => {
+					win.hidden = true;
+				});
+			});
+
+			const handle = win.querySelector<HTMLElement>('[data-drag-handle]');
+			if (!handle) return;
+
+			let dragging = false;
+			let offsetX = 0;
+			let offsetY = 0;
+
+			handle.addEventListener('mousedown', (e) => {
+				if ((e.target as HTMLElement).closest('[data-close]')) return;
+				dragging = true;
+				const rect = win.getBoundingClientRect();
+				offsetX = e.clientX - rect.left;
+				offsetY = e.clientY - rect.top;
+				e.preventDefault();
+			});
+
+			document.addEventListener('mousemove', (e) => {
+				if (!dragging) return;
+				win.style.left = `${e.clientX - offsetX}px`;
+				win.style.top = `${e.clientY - offsetY}px`;
+			});
+
+			document.addEventListener('mouseup', () => {
+				dragging = false;
+			});
+		});
+	}
+</script>
