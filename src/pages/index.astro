@@ -2,204 +2,45 @@
 import Base from '../layouts/Base.astro';
 import RetroWindow from '../components/RetroWindow.astro';
 
-// ===========================================================================
-// Canopy leaf distribution
-// Each leaf is a <use href="#figLeaf"> placed at (cx,cy) with rotation/scale
-// and one of three foliage gradient shades so the canopy has depth.
-// Shades: 0 = back (darkest), 1 = mid, 2 = front highlight
-// We hand-place leaves in roughly concentric rings so the silhouette becomes
-// palmate by accumulation rather than being a clean ellipse.
-// ===========================================================================
-
+// Canopy: a few foliage blobs render the mass; a hand-placed list of
+// individually visible fig leaves sits on top, sized larger at the rim so
+// palmate lobes protrude against the sky. Coordinates are in the local
+// coord system of the .tree-shift group (itself translate(-60 40)).
 type Leaf = { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 };
+const SHADE_SYMBOL = ['#figLeafDark', '#figLeafMid', '#figLeafLight'] as const;
 
-// Map shade index to symbol id (each symbol pre-bakes its own fill gradient
-// because fill on a <use> does not propagate into a <symbol>'s internal paths
-// via currentColor across all browsers reliably).
-const SHADE_SYMBOL = ['#figLeafDark', '#figLeafMid', '#figLeafLight'];
-
-// Seeded pseudo-random so layout is deterministic but feels organic
-function mulberry32(seed: number) {
-	let a = seed >>> 0;
-	return function () {
-		a |= 0;
-		a = (a + 0x6d2b79f5) | 0;
-		let t = Math.imul(a ^ (a >>> 15), 1 | a);
-		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-	};
-}
-const rand = mulberry32(42);
-
-// Anchor points where leaves cluster (branch tips + crown nodes).
-// Counts dramatically reduced from iter-2 (~340 → ~200) so individual
-// palmate shapes are readable instead of mashing into a uniform blob.
-// Leaf scales are larger to compensate; the outer-hull edge-accent pass
-// (below) then reinforces the silhouette with big, lobe-outward leaves.
-const clusters: { cx: number; cy: number; rx: number; ry: number; count: number; shade: 0 | 1 | 2 }[] = [
-	// Back layer (dark, behind everything) — interior shadow mass
-	{ cx: 260, cy: 120, rx: 220, ry: 145, count: 20, shade: 0 },
-	{ cx: 480, cy: 95, rx: 150, ry: 105, count: 12, shade: 0 },
-	{ cx: 105, cy: 110, rx: 140, ry: 100, count: 12, shade: 0 },
-	{ cx: 520, cy: 235, rx: 130, ry: 90, count: 10, shade: 0 },
-	{ cx: 70, cy: 300, rx: 100, ry: 70, count: 8, shade: 0 },
-	{ cx: 555, cy: 400, rx: 115, ry: 78, count: 10, shade: 0 },
-
-	// Mid layer
-	{ cx: 250, cy: 110, rx: 200, ry: 135, count: 18, shade: 1 },
-	{ cx: 470, cy: 85, rx: 125, ry: 88, count: 10, shade: 1 },
-	{ cx: 110, cy: 95, rx: 120, ry: 82, count: 10, shade: 1 },
-	{ cx: 510, cy: 220, rx: 110, ry: 78, count: 9, shade: 1 },
-	{ cx: 90, cy: 290, rx: 92, ry: 62, count: 7, shade: 1 },
-	{ cx: 540, cy: 390, rx: 100, ry: 68, count: 8, shade: 1 },
-	{ cx: 325, cy: 260, rx: 78, ry: 58, count: 6, shade: 1 },
-	{ cx: 180, cy: 350, rx: 68, ry: 52, count: 6, shade: 1 },
-
-	// Front highlight layer (lighter, on top)
-	{ cx: 240, cy: 95, rx: 165, ry: 108, count: 14, shade: 2 },
-	{ cx: 465, cy: 75, rx: 95, ry: 68, count: 8, shade: 2 },
-	{ cx: 100, cy: 85, rx: 92, ry: 62, count: 8, shade: 2 },
-	{ cx: 505, cy: 210, rx: 92, ry: 62, count: 7, shade: 2 },
-	{ cx: 545, cy: 385, rx: 82, ry: 52, count: 6, shade: 2 },
-	{ cx: 305, cy: 250, rx: 68, ry: 48, count: 5, shade: 2 }
+const leaves: Leaf[] = [
+	// Upper rim (clockwise from upper-left)
+	{ x: 70, y: 110, r: -70, s: 1.3, shade: 2 },
+	{ x: 130, y: 60, r: -40, s: 1.6, shade: 2 },
+	{ x: 210, y: 35, r: -15, s: 1.7, shade: 2 },
+	{ x: 290, y: 25, r: 5, s: 1.8, shade: 2 },
+	{ x: 375, y: 40, r: 25, s: 1.6, shade: 2 },
+	{ x: 450, y: 70, r: 50, s: 1.5, shade: 2 },
+	{ x: 520, y: 115, r: 75, s: 1.4, shade: 2 },
+	// Right rim
+	{ x: 570, y: 190, r: 100, s: 1.3, shade: 1 },
+	{ x: 585, y: 265, r: 125, s: 1.3, shade: 2 },
+	{ x: 555, y: 340, r: 150, s: 1.3, shade: 1 },
+	// Bottom arc
+	{ x: 480, y: 395, r: 175, s: 1.3, shade: 2 },
+	{ x: 390, y: 420, r: -175, s: 1.2, shade: 1 },
+	{ x: 290, y: 430, r: 180, s: 1.2, shade: 2 },
+	{ x: 190, y: 410, r: -170, s: 1.2, shade: 1 },
+	// Left rim
+	{ x: 100, y: 365, r: -145, s: 1.3, shade: 2 },
+	{ x: 40, y: 290, r: -115, s: 1.3, shade: 1 },
+	{ x: 25, y: 215, r: -95, s: 1.3, shade: 2 },
+	// Interior accent leaves (poking out of the blob mass)
+	{ x: 200, y: 140, r: -20, s: 1.0, shade: 2 },
+	{ x: 320, y: 120, r: 10, s: 1.05, shade: 2 },
+	{ x: 430, y: 155, r: 35, s: 1.0, shade: 2 },
+	{ x: 160, y: 220, r: -55, s: 0.95, shade: 2 },
+	{ x: 360, y: 240, r: 25, s: 1.0, shade: 2 },
+	{ x: 460, y: 260, r: 55, s: 0.95, shade: 2 },
+	{ x: 260, y: 315, r: 170, s: 1.0, shade: 2 },
+	{ x: 380, y: 355, r: 195, s: 1.05, shade: 2 }
 ];
-
-const leaves: Leaf[] = [];
-for (const c of clusters) {
-	for (let i = 0; i < c.count; i++) {
-		// Uniform disc sample, weighted so more leaves near the edge (silhouette)
-		const t = Math.sqrt(rand());
-		const theta = rand() * Math.PI * 2;
-		const x = c.cx + Math.cos(theta) * c.rx * t;
-		const y = c.cy + Math.sin(theta) * c.ry * t * 0.9;
-		// Rotation biased outward from the cluster center so leaf tips flare out
-		const outward = (Math.atan2(y - c.cy, x - c.cx) * 180) / Math.PI;
-		const r = outward + (rand() - 0.5) * 60;
-		const s = 1.1 + rand() * 0.9; // 1.1..2.0 — big, readable individual leaves
-		leaves.push({ x, y, r, s, shade: c.shade });
-	}
-}
-
-// Edge-accent pass: 36 oversized leaves placed exactly on the outer hull
-// of the canopy so unmistakable palmate lobes poke into the sky. Each is
-// rotated so a lobe-tip faces outward from the canopy centroid.
-// The hull is described by (angle → radius) polar samples around a
-// notional canopy centroid; values tuned to match the cluster distribution.
-type HullPoint = { ang: number; rx: number; ry: number };
-const canopyCx = 280;
-const canopyCy = 180;
-const hullPoints: HullPoint[] = [
-	{ ang: -95, rx: 280, ry: 170 }, // top-right shoulder
-	{ ang: -78, rx: 310, ry: 180 }, // upper right
-	{ ang: -60, rx: 320, ry: 180 }, // right arc
-	{ ang: -40, rx: 320, ry: 190 }, // right bulge
-	{ ang: -20, rx: 330, ry: 200 }, // right-mid
-	{ ang: 0, rx: 330, ry: 200 }, // far right
-	{ ang: 20, rx: 320, ry: 210 }, // right lower
-	{ ang: 40, rx: 300, ry: 220 }, // lower right shoulder
-	{ ang: 60, rx: 260, ry: 230 }, // lower right drop
-	{ ang: 80, rx: 200, ry: 240 }, // bottom
-	{ ang: 100, rx: 180, ry: 230 }, // bottom-left drop
-	{ ang: 120, rx: 220, ry: 210 }, // lower-left shoulder
-	{ ang: 140, rx: 250, ry: 190 }, // left-lower
-	{ ang: 160, rx: 270, ry: 180 }, // left-mid
-	{ ang: 175, rx: 280, ry: 170 }, // far left
-	{ ang: -175, rx: 285, ry: 160 }, // upper-left-far
-	{ ang: -160, rx: 280, ry: 155 }, // upper-left
-	{ ang: -140, rx: 260, ry: 150 }, // upper-left inward
-	{ ang: -120, rx: 250, ry: 155 }, // top arc-left
-	{ ang: -105, rx: 265, ry: 160 } // top
-];
-// Generate ~36 edge leaves by sampling along the hull with jitter. Each is
-// oriented so the tip of the leaf points AWAY from the canopy centroid
-// (figLeafPath's natural tip is at y≈-74, i.e. rotation 0 puts the tip up;
-// we convert radial angle → leaf rotation accordingly).
-const EDGE_COUNT = 36;
-for (let i = 0; i < EDGE_COUNT; i++) {
-	const h = hullPoints[i % hullPoints.length];
-	const hNext = hullPoints[(i + 1) % hullPoints.length];
-	const tLerp = (i / EDGE_COUNT) * hullPoints.length - Math.floor((i / EDGE_COUNT) * hullPoints.length);
-	const angDeg = h.ang + (hNext.ang - h.ang) * tLerp + (rand() - 0.5) * 8;
-	const ang = (angDeg * Math.PI) / 180;
-	const rx = h.rx + (hNext.rx - h.rx) * tLerp;
-	const ry = h.ry + (hNext.ry - h.ry) * tLerp;
-	// Place slightly outside the hull so the leaf pokes out
-	const pushOut = 0.98 + rand() * 0.1;
-	const x = canopyCx + Math.cos(ang) * rx * pushOut;
-	const y = canopyCy + Math.sin(ang) * ry * pushOut;
-	// Rotation: leaf tip natural is up (−y). For the tip to point radially
-	// outward (in the direction of `ang`), rotate so that up→outward:
-	// outward vector angle = angDeg; up-angle = -90. Therefore rotate by
-	// angDeg + 90 with jitter.
-	const r = angDeg + 90 + (rand() - 0.5) * 18;
-	const s = 1.4 + rand() * 0.6; // 1.4..2.0 — larger than average
-	// Alternate shade 1/2 so edge leaves catch light like the front layer
-	const shade = (i % 2 === 0 ? 2 : 1) as 0 | 1 | 2;
-	leaves.push({ x, y, r, s, shade });
-}
-
-// Bottom-arc edge-accent pass (iter-4): the iter-3 edge pass focused on
-// the upper + outer hull; the bottom of the canopy still read as a uniform
-// green mass. Add 12 oversized leaves along angles 60..120 whose tips point
-// down-outward so palmate lobes protrude below the canopy too.
-const BOTTOM_EDGE_COUNT = 12;
-for (let i = 0; i < BOTTOM_EDGE_COUNT; i++) {
-	const t = i / (BOTTOM_EDGE_COUNT - 1);
-	const angDeg = 62 + t * 58 + (rand() - 0.5) * 6; // 62..120
-	const ang = (angDeg * Math.PI) / 180;
-	// Slightly wider hull down there so lobes clear the interior mass
-	const rx = 280 - Math.abs(90 - angDeg) * 1.4;
-	const ry = 240 + (rand() - 0.5) * 10;
-	const pushOut = 1.0 + rand() * 0.08;
-	const x = canopyCx + Math.cos(ang) * rx * pushOut;
-	const y = canopyCy + Math.sin(ang) * ry * pushOut;
-	// Rotate so the leaf tip points radially outward (down-outward)
-	const r = angDeg + 90 + (rand() - 0.5) * 16;
-	const s = 1.6 + rand() * 0.4;
-	const shade = (i % 2 === 0 ? 2 : 1) as 0 | 1 | 2;
-	leaves.push({ x, y, r, s, shade });
-}
-
-// A couple of loose leaves trailing below the canopy, softening the hard
-// edge where the lowest cluster meets the trunk (verifier nice-to-have).
-const trailingLeaves: { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 }[] = [
-	{ x: 220, y: 420, r: 175, s: 1.2, shade: 1 },
-	{ x: 330, y: 450, r: 190, s: 1.3, shade: 2 },
-	{ x: 420, y: 440, r: 165, s: 1.15, shade: 1 }
-];
-leaves.push(...trailingLeaves);
-
-// Sort back-to-front by shade so painter's algorithm works
-leaves.sort((a, b) => a.shade - b.shade);
-
-// Separate a subset of front-layer edge leaves so we can apply a soft
-// backlight glow to them without paying the paint cost on all leaves.
-// We tag any leaf whose position is within 28px of the hull radius.
-function isEdgeLeaf(l: Leaf): boolean {
-	const dx = l.x - canopyCx;
-	const dy = l.y - canopyCy;
-	const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
-	// Find nearest hull sample
-	let best = hullPoints[0];
-	let bestDiff = 999;
-	for (const h of hullPoints) {
-		const diff = Math.abs(((ang - h.ang + 540) % 360) - 180);
-		if (diff < bestDiff) {
-			bestDiff = diff;
-			best = h;
-		}
-	}
-	const r = Math.sqrt(dx * dx + (dy * dy) / 0.81);
-	const hullR = Math.sqrt(best.rx * best.rx + (best.ry * best.ry) / 0.81) * 0.5; // approx
-	// simpler: accept front-shade leaves outside a threshold
-	return l.shade === 2 && r > Math.min(best.rx, best.ry) * 0.85;
-}
-const edgeLeaves = leaves.filter(isEdgeLeaf);
-const bodyLeaves = leaves.filter((l) => !isEdgeLeaf(l));
-// Split body leaves so branches can render between the dark back layer
-// and the mid/front layers — this lets branch "slashes" peek through.
-const backBodyLeaves = bodyLeaves.filter((l) => l.shade === 0);
-const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 ---
 
 <Base>
@@ -272,12 +113,14 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 					<stop offset="1" stop-color="#5e7550" />
 				</linearGradient>
 
-				<!-- Ripe fig gradient -->
-				<radialGradient id="figPurple" cx="0.35" cy="0.3" r="0.85">
-					<stop offset="0" stop-color="#8b556c" />
-					<stop offset="0.5" stop-color="#5a2d42" />
-					<stop offset="1" stop-color="#36182a" />
-				</radialGradient>
+				<!-- Realistic fig gradient: green-yellow shoulders → mulberry → deep purple -->
+				<linearGradient id="figBody" x1="0.5" x2="0.5" y1="0" y2="1">
+					<stop offset="0" stop-color="#a5ae68" />
+					<stop offset="0.18" stop-color="#8d7a62" />
+					<stop offset="0.4" stop-color="#6b3e54" />
+					<stop offset="0.75" stop-color="#4a2234" />
+					<stop offset="1" stop-color="#2a1020" />
+				</linearGradient>
 
 				<!-- Chunky XP-Bliss style cloud: soft white painted blob -->
 				<radialGradient id="cloudBody" cx="0.5" cy="0.55" r="0.55">
@@ -432,28 +275,42 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 					<use href="#figLeafVeins" stroke="#23311a" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
 				</symbol>
 
-				<!-- Reusable ripe fig: teardrop with stem + ostiole -->
+				<!-- Reusable ripe fig: squat realistic shape with green stem,
+				     green-yellow shoulder, mulberry-to-purple body gradient. -->
 				<symbol id="ripeFig" viewBox="-30 -40 60 70" overflow="visible">
-					<path d="M 0 -30 Q -2 -36, -6 -38" stroke="#3a2818" stroke-width="2" fill="none" stroke-linecap="round" />
+					<!-- chunky green stem curving slightly -->
+					<path d="M 0 -26 Q -3 -32, -5 -37" stroke="#5d7235" stroke-width="4.5" fill="none" stroke-linecap="round" />
+					<!-- tiny leaf bract at the stem tip -->
+					<path d="M -5 -37 Q -2 -40, 1 -37 Q 0 -33, -4 -34 Z" fill="#7a9045" />
+					<!-- squat body: narrow shoulders, wider round bottom -->
 					<path
-						d="M -14 -26
-						   Q -10 -30, -4 -30
-						   Q 0 -32, 4 -30
-						   Q 10 -30, 14 -26
-						   Q 22 -16, 22 -2
-						   Q 22 18, 10 26
-						   Q 0 30, -10 26
-						   Q -22 18, -22 -2
-						   Q -22 -16, -14 -26 Z"
-						fill="url(#figPurple)"
+						d="M -14 -22
+						   Q -8 -26, -2 -26
+						   Q 0 -28, 2 -26
+						   Q 8 -26, 14 -22
+						   Q 24 -10, 26 4
+						   Q 24 18, 12 26
+						   Q 0 30, -12 26
+						   Q -24 18, -26 4
+						   Q -24 -10, -14 -22 Z"
+						fill="url(#figBody)"
 					/>
-					<ellipse cx="-7" cy="-10" rx="5" ry="9" fill="#b48298" opacity="0.28" />
-					<circle cx="0" cy="24" r="1.6" fill="#1c0a14" />
-					<g stroke="#2a0f1c" stroke-width="0.5" fill="none" opacity="0.35">
-						<path d="M -14 -18 Q -10 4, -6 26" />
-						<path d="M 14 -18 Q 10 4, 6 26" />
-						<path d="M 0 -28 L 0 26" />
+					<!-- green/yellow shoulder blotch (variegation near stem) -->
+					<path d="M -6 -18 Q -2 -22, 2 -22 Q 8 -22, 9 -17 Q 5 -13, -1 -13 Q -7 -14, -6 -18 Z" fill="#a5ae68" opacity="0.55" />
+					<!-- secondary yellow-green wash on the side -->
+					<ellipse cx="10" cy="-10" rx="5" ry="6" fill="#9fa65c" opacity="0.32" />
+					<!-- vertical ribs -->
+					<g stroke="#240d18" stroke-width="0.5" fill="none" opacity="0.35">
+						<path d="M -14 -14 Q -14 8, -10 24" />
+						<path d="M -7 -22 Q -8 8, -6 27" />
+						<path d="M 0 -24 L 0 28" />
+						<path d="M 7 -22 Q 8 8, 6 27" />
+						<path d="M 14 -14 Q 14 8, 10 24" />
 					</g>
+					<!-- soft highlight -->
+					<ellipse cx="-10" cy="-2" rx="5" ry="10" fill="#d6b4c2" opacity="0.2" />
+					<!-- ostiole (eye at bottom) -->
+					<circle cx="0" cy="28" r="1.6" fill="#1a0812" />
 				</symbol>
 			</defs>
 
@@ -539,24 +396,6 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 				<ellipse cx="1218" cy="456" rx="8" ry="11" />
 				<rect x="1216" y="462" width="3" height="8" fill="#3d4e35" />
 			</g>
-			<!-- Farmhouse hints: two small muted structures on the far hill.
-			     Enlarged (20x14 / 16x11) with darker pitched roofs + a tiny
-			     chimney so they read as "farmhouse" at thumbnail scale, not
-			     as stray pink specks (iter-3 verifier feedback). -->
-			<g opacity="0.85">
-				<!-- house 1 -->
-				<rect x="858" y="454" width="20" height="14" fill="#c9b8a0" stroke="#5a4434" stroke-width="0.6" />
-				<path d="M 855 454 L 868 444 L 881 454 Z" fill="#7a5c48" stroke="#4a3628" stroke-width="0.6" stroke-linejoin="round" />
-				<!-- chimney -->
-				<rect x="874" y="446" width="2.6" height="4" fill="#5a4434" />
-				<!-- door -->
-				<rect x="866" y="461" width="3.5" height="7" fill="#5a4434" />
-				<!-- house 2 -->
-				<rect x="1084" y="462" width="16" height="11" fill="#bba991" stroke="#4a3628" stroke-width="0.6" />
-				<path d="M 1082 462 L 1092 454 L 1102 462 Z" fill="#6a4f3c" stroke="#3e2b1f" stroke-width="0.6" stroke-linejoin="round" />
-				<rect x="1098" y="455" width="2.2" height="3.2" fill="#4a3628" />
-				<rect x="1090" y="466" width="3" height="6" fill="#4a3628" />
-			</g>
 			<!-- Sage vegetation dabs on the mid hills (softer than tree silhouettes) -->
 			<g fill="#7a9168" opacity="0.45">
 				<ellipse cx="640" cy="500" rx="28" ry="5" />
@@ -605,9 +444,12 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			</g>
 
 			<!-- =========================================================
-			     FIG TREE — large, occupying most of the left half
-			     Canvas: 1440x900; tree covers roughly x=0..620, y=40..720
+			     FIG TREE — large, occupying most of the left half.
+			     Wrapped in a translate() group so the tree + person +
+			     hotspots sit slightly down-and-left from the original
+			     composition (per user request).
 			     ========================================================= -->
+			<g class="tree-shift" transform="translate(-60 40)">
 
 			<!-- Root base bump in the ground -->
 			<ellipse cx="250" cy="700" rx="220" ry="22" fill="#4a5a38" opacity="0.55" />
@@ -666,42 +508,39 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			</g>
 
 			<!-- ============================================================
-			     CANOPY — layered palmate fig leaves with a visible branch
-			     skeleton peeking through gaps.
-			     Render order:
-			       1. back (dark) leaves — interior shadow mass
-			       2. branch skeleton (dark lines over back leaves, under mid)
-			       3. mid + front (light) leaves — body & highlights
-			       4. edge-accent leaves — oversized palmate leaves on the
-			          outer hull so lobes protrude against sky, backlit
+			     CANOPY — a few blobby foliage masses with branch skeleton
+			     peeking through, and individually visible palmate fig leaves
+			     scattered on top (larger at the rim so lobes protrude).
 			     ============================================================ -->
 			<g class="canopy">
-				{backBodyLeaves.map((l) => (
-					<use
-						href={SHADE_SYMBOL[l.shade]}
-						x={-60}
-						y={-80}
-						width={120}
-						height={90}
-						transform={`translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.r.toFixed(1)}) scale(${l.s.toFixed(2)})`}
-					/>
-				))}
+				<!-- Back/underside blobs -->
+				<ellipse cx="260" cy="180" rx="200" ry="155" fill="url(#foliageDark)" />
+				<ellipse cx="120" cy="180" rx="120" ry="100" fill="url(#foliageDark)" opacity="0.95" />
+				<ellipse cx="430" cy="170" rx="145" ry="115" fill="url(#foliageDark)" opacity="0.95" />
 
-				{/* Thicker branch skeleton drawn over the dark back leaves so it reads as branches poking through foliage */}
-				<g class="branch-skeleton" stroke="url(#branchDark)" fill="none" stroke-linecap="round" opacity="0.88">
+				<!-- Branch skeleton: dark slashes through the foliage -->
+				<g class="branch-skeleton" stroke="url(#branchDark)" fill="none" stroke-linecap="round" opacity="0.85">
 					<path d="M 310 180 Q 400 140, 500 110" stroke-width="11" />
 					<path d="M 255 130 Q 180 100, 95 80" stroke-width="10" />
 					<path d="M 330 260 Q 430 240, 540 230" stroke-width="8" />
 					<path d="M 340 380 Q 470 390, 580 400" stroke-width="7" />
 					<path d="M 180 320 Q 100 310, 30 320" stroke-width="7" />
-					{/* Sub-branches reaching toward the crown */}
 					<path d="M 290 150 Q 340 100, 380 70" stroke-width="5" />
-					<path d="M 270 100 Q 240 70, 200 55" stroke-width="4" />
 					<path d="M 440 130 Q 480 100, 520 85" stroke-width="4" />
-					<path d="M 420 240 Q 470 220, 510 205" stroke-width="4" />
 				</g>
 
-				{foreBodyLeaves.map((l) => (
+				<!-- Lit/front blobs on top of branches -->
+				<ellipse cx="270" cy="140" rx="180" ry="100" fill="url(#foliageMid)" opacity="0.9" />
+				<ellipse cx="430" cy="270" rx="130" ry="95" fill="url(#foliageMid)" opacity="0.85" />
+				<ellipse cx="180" cy="290" rx="110" ry="90" fill="url(#foliageMid)" opacity="0.85" />
+				<ellipse cx="310" cy="360" rx="140" ry="75" fill="url(#foliageMid)" opacity="0.85" />
+				<!-- Highlight blobs -->
+				<ellipse cx="255" cy="105" rx="150" ry="60" fill="url(#foliageLight)" opacity="0.55" />
+				<ellipse cx="420" cy="225" rx="85" ry="50" fill="url(#foliageLight)" opacity="0.5" />
+
+				<!-- Individually visible fig leaves scattered on top (rim leaves
+				     larger so palmate lobes show against the sky) -->
+				{leaves.map((l) => (
 					<use
 						href={SHADE_SYMBOL[l.shade]}
 						x={-60}
@@ -711,20 +550,6 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 						transform={`translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.r.toFixed(1)}) scale(${l.s.toFixed(2)})`}
 					/>
 				))}
-
-				{/* Edge leaves painted last with a soft backlight glow so palmate lobes pop against the sky */}
-				<g class="edge-accent" filter="url(#leafGlow)">
-					{edgeLeaves.map((l) => (
-						<use
-							href={SHADE_SYMBOL[l.shade]}
-							x={-60}
-							y={-80}
-							width={120}
-							height={90}
-							transform={`translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.r.toFixed(1)}) scale(${l.s.toFixed(2)})`}
-						/>
-					))}
-				</g>
 			</g>
 
 			<!-- Static (decorative) figs scattered on the tree -->
@@ -876,6 +701,8 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 					<circle cx="460" cy="340" r="26" fill="transparent" />
 				</g>
 			</g>
+
+			</g><!-- /.tree-shift -->
 
 			<!-- Overall film grain pass on top of everything -->
 			<rect width="1440" height="900" filter="url(#grain)" opacity="0.3" pointer-events="none" />
