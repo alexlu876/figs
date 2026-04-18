@@ -1,20 +1,13 @@
 ---
-import { getCollection } from 'astro:content';
-import Base from '../../layouts/Base.astro';
-
-const notes = (await getCollection('notes')).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-);
-
-const fmt = (d: Date) => d.toISOString().slice(0, 10);
+import Base from '../layouts/Base.astro';
 ---
 
-<Base title="notes · figtre.es">
+<Base title="not found · figtre.es" description="This branch doesn't seem to bear fruit.">
 	<div class="page">
-		<article class="window" aria-labelledby="notes-title">
+		<article class="window" aria-labelledby="nf-title">
 			<header class="titlebar">
 				<span class="rule" aria-hidden="true"></span>
-				<span class="title" id="notes-title">
+				<span class="title" id="nf-title">
 					<svg class="leaf" viewBox="-40 -40 80 80" width="16" height="16" aria-hidden="true">
 						<path
 							d="M 0 -34
@@ -40,40 +33,24 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 							opacity="0.55"
 						/>
 					</svg>
-					<em>notes</em>
+					<em>404 &mdash; not found</em>
 				</span>
 				<span class="rule" aria-hidden="true"></span>
 			</header>
 
 			<section class="body">
-				<p class="lede">
-					Short entries. Planted and watered here as they come.
+				<p class="code">error 404</p>
+				<p class="lede">This branch didn't bear fruit.</p>
+				<p>
+					The page you were looking for has either been pruned, is still
+					a seedling, or was never planted. Try another fig — there
+					should be a few hanging on the tree.
 				</p>
-
-				{notes.length === 0 ? (
-					<p class="empty">Nothing here yet — come back soon.</p>
-				) : (
-					<ul>
-						{notes.map((n) => (
-							<li>
-								<a href={`/notes/${n.id}`} class="row">
-									<span class="row-head">
-										<span class="marker" aria-hidden="true">§</span>
-										<span class="entry-title">{n.data.title}</span>
-										<time datetime={n.data.date.toISOString()}>{fmt(n.data.date)}</time>
-									</span>
-									{n.data.description && (
-										<span class="excerpt">{n.data.description}</span>
-									)}
-								</a>
-							</li>
-						))}
-					</ul>
-				)}
 			</section>
 
 			<footer class="foot">
-				<a class="back" href="/">← back to the tree</a>
+				<a class="back" href="/">&larr; back to the tree</a>
+				<a class="back" href="/notes">notes</a>
 			</footer>
 		</article>
 	</div>
@@ -93,7 +70,6 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 		position: relative;
 	}
 	.page::before {
-		/* very subtle noise/paper tooth */
 		content: '';
 		position: absolute;
 		inset: 0;
@@ -109,7 +85,7 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
 	.window {
 		position: relative;
-		width: min(92vw, 640px);
+		width: min(92vw, 560px);
 		background: #ede8dc;
 		border: 1px solid #1f1f1f;
 		box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
@@ -140,87 +116,36 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 	.title .leaf { display: block; }
 
 	.body {
-		padding: 1.75rem 2rem 1.25rem;
+		padding: 1.75rem 2rem 1.5rem;
+		line-height: 1.65;
+	}
+	.code {
+		margin: 0 0 0.75rem;
+		font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #5a2d42;
+		opacity: 0.85;
 	}
 	.lede {
-		margin: 0 0 1.25rem;
+		margin: 0 0 0.9rem;
 		font-style: italic;
-		color: #4a4a42;
-		font-size: 0.98rem;
+		font-size: 1.1rem;
 	}
-	.empty {
-		margin: 0;
-		color: #4a4a42;
-		font-style: italic;
-	}
-
-	ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		/* Sage accent rule at the top of the list so the reading area
-		   has a quiet visual anchor that ties back to the fig-leaf vein
-		   color used across the site. */
-		border-top: 2px solid rgba(94, 117, 80, 0.45);
-	}
-	li {
-		border-bottom: 1px dashed rgba(31, 31, 31, 0.22);
-	}
-	.row {
-		display: block;
-		padding: 0.75rem 0.75rem;
-		margin: 0 -0.75rem;
-		text-decoration: none;
-		color: #1f1f1f;
-		transition: background 140ms ease;
-	}
-	.row:hover, .row:focus-visible {
-		background: rgba(94, 117, 80, 0.08);
-		outline: none;
-	}
-	.row:hover .entry-title,
-	.row:focus-visible .entry-title { text-decoration: underline; }
-	.row-head {
-		display: flex;
-		align-items: baseline;
-		gap: 0.6rem;
-	}
-	.marker {
-		color: #5a2d42;
-		font-style: italic;
-		opacity: 0.75;
-	}
-	.entry-title {
-		font-size: 1.05rem;
-		flex: 0 1 auto;
-	}
-	time {
-		color: #4a4a42;
-		font-size: 0.88rem;
-		font-variant-numeric: tabular-nums;
-		white-space: nowrap;
-		margin-left: auto;
-	}
-	.excerpt {
-		display: block;
-		margin-top: 0.25rem;
-		padding-left: 1.1rem; /* align with entry-title past the § marker */
-		color: #4a4a42;
-		font-style: italic;
-		font-size: 0.92rem;
-		line-height: 1.5;
-	}
+	.body p { margin: 0.5rem 0; }
 
 	.foot {
 		border-top: 1px solid #1f1f1f;
 		padding: 0.75rem 1rem;
 		display: flex;
 		justify-content: center;
+		gap: 0.75rem;
 	}
 	.back {
 		background: #ede8dc;
 		border: 1px solid #1f1f1f;
-		padding: 0.35rem 1.5rem;
+		padding: 0.35rem 1.25rem;
 		font-family: inherit;
 		font-style: italic;
 		font-size: 0.95rem;

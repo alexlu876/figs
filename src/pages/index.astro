@@ -828,26 +828,37 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			     ========================================================= -->
 			<g class="leaves">
 				{/* notes: upper-right protruding leaf, tip angled outward from canopy */}
-				<g class="hotspot hotspot-leaf" data-window="notes" transform="translate(640 60) rotate(55) scale(1.55)">
+				<g class="hotspot hotspot-leaf" data-window="notes" tabindex="0" role="button" aria-label="Open notes" transform="translate(640 60) rotate(55) scale(1.55)">
+					<title>notes</title>
 					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
 					<circle cx="0" cy="-40" r="48" fill="transparent" />
 				</g>
 				{/* contact: left-side protruding leaf clearly outside the canopy mass */}
-				<g class="hotspot hotspot-leaf" data-window="contact" transform="translate(10 220) rotate(-105) scale(1.55)">
+				<g class="hotspot hotspot-leaf" data-window="contact" tabindex="0" role="button" aria-label="Open contact" transform="translate(10 220) rotate(-105) scale(1.55)">
+					<title>contact</title>
 					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
 					<circle cx="0" cy="-40" r="46" fill="transparent" />
 				</g>
 			</g>
 
 			<g class="figs">
-				<g class="hotspot" data-window="about">
+				{/* The 'about' fig carries the breathe pulse + one-shot bob so
+				    first-time visitors see that something on the tree is alive
+				    and clickable. Only one hotspot gets the continuous pulse —
+				    five would be noisy. Animations are gated via
+				    prefers-reduced-motion below. */}
+				<g class="hotspot hotspot-pulse" data-window="about" tabindex="0" role="button" aria-label="Open about">
+					<title>about</title>
 					<g transform="translate(300 200) scale(1.3)" filter="url(#figShadow)">
-						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
+						<g class="pulse-target">
+							<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
+						</g>
 					</g>
 					<circle cx="300" cy="200" r="26" fill="transparent" />
 				</g>
 
-				<g class="hotspot" data-window="projects">
+				<g class="hotspot" data-window="projects" tabindex="0" role="button" aria-label="Open projects">
+					<title>projects</title>
 					<g transform="translate(170 380) scale(1.35)" filter="url(#figShadow)">
 						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
 						<use href="#ripeFig" x="8" y="-22" width="36" height="44" />
@@ -855,7 +866,8 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 					<circle cx="175" cy="380" r="32" fill="transparent" />
 				</g>
 
-				<g class="hotspot" data-window="now">
+				<g class="hotspot" data-window="now" tabindex="0" role="button" aria-label="Open now">
+					<title>now</title>
 					<g transform="translate(460 340) scale(1.25)" filter="url(#figShadow)">
 						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
 					</g>
@@ -917,6 +929,13 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 		filter: brightness(1.18) drop-shadow(0 0 8px rgba(255, 236, 190, 0.75));
 		transform: scale(1.08);
 	}
+	.hotspot:focus {
+		outline: none;
+	}
+	.hotspot:focus-visible {
+		filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 236, 190, 0.9));
+		transform: scale(1.06);
+	}
 	/* Warm rim on interactive leaves so a user intuits they're clickable */
 	.hotspot-leaf use {
 		stroke: #f4e3a8;
@@ -924,6 +943,48 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 		stroke-opacity: 0.85;
 		paint-order: stroke fill;
 		filter: drop-shadow(0 0 4px rgba(246, 230, 170, 0.35));
+	}
+
+	/* Continuous "breathe" pulse on one hotspot (the 'about' fig) so a
+	   first-time visitor notices at least one clickable thing on the
+	   tree. Keep it gentle — this shouldn't be a flashing ad. The
+	   .pulse-target sits inside the parent's translate/scale, so we
+	   animate a small relative scale around (0,0). */
+	@keyframes breathe {
+		0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(246, 230, 170, 0)); }
+		50%  { transform: scale(1.1); filter: drop-shadow(0 0 6px rgba(246, 230, 170, 0.8)); }
+		100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(246, 230, 170, 0)); }
+	}
+	.hotspot-pulse .pulse-target {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: breathe 3.2s ease-in-out infinite;
+	}
+	.hotspot-pulse:hover .pulse-target {
+		/* Pause the pulse while the user is interacting — hover takes over. */
+		animation-play-state: paused;
+	}
+
+	/* One-shot "pssst" bob ~2s after load: every hotspot dips 3px down
+	   then settles, so the tree looks momentarily alive and the eye
+	   catches all five clickable spots. Runs once, then stops. The
+	   continuous .hotspot-pulse keeps going after. */
+	@keyframes pssst {
+		0%   { transform: translate(0, 0); }
+		20%  { transform: translate(0, -2px); }
+		45%  { transform: translate(0, 3px); }
+		70%  { transform: translate(0, -1px); }
+		100% { transform: translate(0, 0); }
+	}
+	.hotspot.pssst {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: pssst 1.6s ease-out 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hotspot-pulse .pulse-target { animation: none; }
+		.hotspot.pssst { animation: none; }
 	}
 
 	/* Slow painterly cloud drift — three staggered offsets so the sky
@@ -950,16 +1011,46 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			el.style.zIndex = String(topZ);
 		};
 
-		scene.querySelectorAll<SVGElement>('.hotspot').forEach((el) => {
-			el.addEventListener('click', () => {
-				const id = (el as SVGElement & { dataset: DOMStringMap }).dataset.window;
-				if (!id) return;
-				const win = document.getElementById(`window-${id}`) as HTMLElement | null;
-				if (!win) return;
-				win.hidden = false;
-				bringToFront(win);
+		const openWindow = (id: string) => {
+			const win = document.getElementById(`window-${id}`) as HTMLElement | null;
+			if (!win) return;
+			win.hidden = false;
+			bringToFront(win);
+		};
+
+		const hotspots = scene.querySelectorAll<SVGElement>('.hotspot');
+		hotspots.forEach((el) => {
+			const id = (el as SVGElement & { dataset: DOMStringMap }).dataset.window;
+			if (!id) return;
+			el.addEventListener('click', () => openWindow(id));
+			el.addEventListener('keydown', (e) => {
+				const ke = e as KeyboardEvent;
+				if (ke.key === 'Enter' || ke.key === ' ') {
+					ke.preventDefault();
+					openWindow(id);
+				}
 			});
 		});
+
+		// One-shot "pssst" bob ~1.8s after load so first-time visitors
+		// catch the fact that things on the tree respond. The class is
+		// removed after the animation completes so it doesn't loop.
+		// Respect prefers-reduced-motion.
+		const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+		if (!rm.matches) {
+			window.setTimeout(() => {
+				hotspots.forEach((el, i) => {
+					window.setTimeout(() => {
+						el.classList.add('pssst');
+						el.addEventListener(
+							'animationend',
+							() => el.classList.remove('pssst'),
+							{ once: true }
+						);
+					}, i * 120);
+				});
+			}, 1800);
+		}
 
 		scene.querySelectorAll<HTMLElement>('.window').forEach((win) => {
 			win.addEventListener('mousedown', () => bringToFront(win));
