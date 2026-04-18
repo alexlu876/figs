@@ -1,6 +1,83 @@
 ---
 import Base from '../layouts/Base.astro';
 import RetroWindow from '../components/RetroWindow.astro';
+
+// ===========================================================================
+// Canopy leaf distribution
+// Each leaf is a <use href="#figLeaf"> placed at (cx,cy) with rotation/scale
+// and one of three foliage gradient shades so the canopy has depth.
+// Shades: 0 = back (darkest), 1 = mid, 2 = front highlight
+// We hand-place leaves in roughly concentric rings so the silhouette becomes
+// palmate by accumulation rather than being a clean ellipse.
+// ===========================================================================
+
+type Leaf = { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 };
+
+// Map shade index to symbol id (each symbol pre-bakes its own fill gradient
+// because fill on a <use> does not propagate into a <symbol>'s internal paths
+// via currentColor across all browsers reliably).
+const SHADE_SYMBOL = ['#figLeafDark', '#figLeafMid', '#figLeafLight'];
+
+// Seeded pseudo-random so layout is deterministic but feels organic
+function mulberry32(seed: number) {
+	let a = seed >>> 0;
+	return function () {
+		a |= 0;
+		a = (a + 0x6d2b79f5) | 0;
+		let t = Math.imul(a ^ (a >>> 15), 1 | a);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+const rand = mulberry32(42);
+
+// Anchor points where leaves cluster (branch tips + crown nodes)
+const clusters: { cx: number; cy: number; rx: number; ry: number; count: number; shade: 0 | 1 | 2 }[] = [
+	// Back layer (dark, behind everything)
+	{ cx: 260, cy: 120, rx: 230, ry: 150, count: 36, shade: 0 },
+	{ cx: 480, cy: 95, rx: 155, ry: 110, count: 22, shade: 0 },
+	{ cx: 105, cy: 110, rx: 145, ry: 100, count: 20, shade: 0 },
+	{ cx: 520, cy: 235, rx: 135, ry: 95, count: 18, shade: 0 },
+	{ cx: 70, cy: 300, rx: 105, ry: 75, count: 12, shade: 0 },
+	{ cx: 555, cy: 400, rx: 120, ry: 80, count: 16, shade: 0 },
+
+	// Mid layer
+	{ cx: 250, cy: 110, rx: 210, ry: 140, count: 34, shade: 1 },
+	{ cx: 470, cy: 85, rx: 130, ry: 90, count: 20, shade: 1 },
+	{ cx: 110, cy: 95, rx: 125, ry: 85, count: 18, shade: 1 },
+	{ cx: 510, cy: 220, rx: 115, ry: 80, count: 16, shade: 1 },
+	{ cx: 90, cy: 290, rx: 95, ry: 65, count: 12, shade: 1 },
+	{ cx: 540, cy: 390, rx: 105, ry: 70, count: 14, shade: 1 },
+	{ cx: 325, cy: 260, rx: 80, ry: 60, count: 10, shade: 1 },
+	{ cx: 180, cy: 350, rx: 70, ry: 55, count: 10, shade: 1 },
+
+	// Front highlight layer (lighter, on top)
+	{ cx: 240, cy: 95, rx: 170, ry: 110, count: 24, shade: 2 },
+	{ cx: 465, cy: 75, rx: 100, ry: 70, count: 14, shade: 2 },
+	{ cx: 100, cy: 85, rx: 95, ry: 65, count: 14, shade: 2 },
+	{ cx: 505, cy: 210, rx: 95, ry: 65, count: 12, shade: 2 },
+	{ cx: 545, cy: 385, rx: 85, ry: 55, count: 10, shade: 2 },
+	{ cx: 305, cy: 250, rx: 70, ry: 50, count: 8, shade: 2 }
+];
+
+const leaves: Leaf[] = [];
+for (const c of clusters) {
+	for (let i = 0; i < c.count; i++) {
+		// Uniform disc sample, weighted so more leaves near the edge (silhouette)
+		const t = Math.sqrt(rand());
+		const theta = rand() * Math.PI * 2;
+		const x = c.cx + Math.cos(theta) * c.rx * t;
+		const y = c.cy + Math.sin(theta) * c.ry * t * 0.9;
+		// Rotation biased outward from the cluster center so leaf tips flare out
+		const outward = (Math.atan2(y - c.cy, x - c.cx) * 180) / Math.PI;
+		const r = outward + (rand() - 0.5) * 80;
+		const s = 0.75 + rand() * 0.7; // 0.75..1.45
+		leaves.push({ x, y, r, s, shade: c.shade });
+	}
+}
+
+// Sort back-to-front by shade so painter's algorithm works
+leaves.sort((a, b) => a.shade - b.shade);
 ---
 
 <Base>
@@ -19,16 +96,17 @@ import RetroWindow from '../components/RetroWindow.astro';
 			<defs>
 				<!-- Sky gradient: muted blue fading to pale horizon -->
 				<linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#a7c0d2" />
-					<stop offset="0.55" stop-color="#c5d3d8" />
-					<stop offset="1" stop-color="#d9dccf" />
+					<stop offset="0" stop-color="#8ca8bf" />
+					<stop offset="0.45" stop-color="#afc4d2" />
+					<stop offset="0.85" stop-color="#d6dcd6" />
+					<stop offset="1" stop-color="#dfe2d5" />
 				</linearGradient>
 
-				<!-- Field gradient: sage to deeper meadow -->
+				<!-- Field gradient: sage, less saturated so hills dominate the middle -->
 				<linearGradient id="field" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#a9bc8d" />
-					<stop offset="0.6" stop-color="#8ea272" />
-					<stop offset="1" stop-color="#6e8359" />
+					<stop offset="0" stop-color="#8fa578" />
+					<stop offset="0.5" stop-color="#7a9167" />
+					<stop offset="1" stop-color="#617955" />
 				</linearGradient>
 
 				<!-- Trunk gradient for depth -->
@@ -39,107 +117,181 @@ import RetroWindow from '../components/RetroWindow.astro';
 					<stop offset="1" stop-color="#2a1d14" />
 				</linearGradient>
 
-				<!-- Foliage gradient -->
-				<radialGradient id="foliage" cx="0.4" cy="0.35" r="0.85">
-					<stop offset="0" stop-color="#5e7a48" />
-					<stop offset="0.55" stop-color="#425c33" />
-					<stop offset="1" stop-color="#2e4224" />
+				<!-- Three foliage gradients for layered depth -->
+				<radialGradient id="foliageDark" cx="0.4" cy="0.35" r="0.9">
+					<stop offset="0" stop-color="#3d5430" />
+					<stop offset="0.6" stop-color="#2a3b20" />
+					<stop offset="1" stop-color="#1b2814" />
+				</radialGradient>
+				<radialGradient id="foliageMid" cx="0.4" cy="0.35" r="0.9">
+					<stop offset="0" stop-color="#577043" />
+					<stop offset="0.6" stop-color="#3f5531" />
+					<stop offset="1" stop-color="#2a3b20" />
+				</radialGradient>
+				<radialGradient id="foliageLight" cx="0.4" cy="0.3" r="0.9">
+					<stop offset="0" stop-color="#7a9358" />
+					<stop offset="0.55" stop-color="#577043" />
+					<stop offset="1" stop-color="#3f5531" />
 				</radialGradient>
 
-				<!-- Ripe fig: teardrop gradient -->
+				<!-- Hill gradients: three shades for distance -->
+				<linearGradient id="hillFar" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0" stop-color="#9fb293" />
+					<stop offset="1" stop-color="#8aa181" />
+				</linearGradient>
+				<linearGradient id="hillMid" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0" stop-color="#8ca37b" />
+					<stop offset="1" stop-color="#748c66" />
+				</linearGradient>
+				<linearGradient id="hillNear" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0" stop-color="#768c62" />
+					<stop offset="1" stop-color="#5e7550" />
+				</linearGradient>
+
+				<!-- Ripe fig gradient -->
 				<radialGradient id="figPurple" cx="0.35" cy="0.3" r="0.85">
 					<stop offset="0" stop-color="#8b556c" />
 					<stop offset="0.5" stop-color="#5a2d42" />
 					<stop offset="1" stop-color="#36182a" />
 				</radialGradient>
-				<radialGradient id="figPurple2" cx="0.4" cy="0.35" r="0.85">
-					<stop offset="0" stop-color="#a06a7e" />
-					<stop offset="0.5" stop-color="#6b384f" />
-					<stop offset="1" stop-color="#40202f" />
+
+				<!-- Chunky XP-Bliss style cloud: soft white painted blob -->
+				<radialGradient id="cloudBody" cx="0.5" cy="0.55" r="0.55">
+					<stop offset="0" stop-color="#ffffff" stop-opacity="0.95" />
+					<stop offset="0.6" stop-color="#f4f3eb" stop-opacity="0.7" />
+					<stop offset="1" stop-color="#eaece0" stop-opacity="0" />
 				</radialGradient>
-				<radialGradient id="figPurple3" cx="0.35" cy="0.3" r="0.85">
-					<stop offset="0" stop-color="#7c4a60" />
-					<stop offset="0.5" stop-color="#4f2839" />
-					<stop offset="1" stop-color="#2e1322" />
+				<radialGradient id="cloudShadow" cx="0.5" cy="0.7" r="0.55">
+					<stop offset="0" stop-color="#9fb2c1" stop-opacity="0.45" />
+					<stop offset="1" stop-color="#9fb2c1" stop-opacity="0" />
 				</radialGradient>
 
-				<!-- Soft cloud -->
-				<radialGradient id="cloud" cx="0.5" cy="0.5" r="0.5">
-					<stop offset="0" stop-color="#f4f2ea" stop-opacity="0.95" />
-					<stop offset="0.6" stop-color="#e8e6dc" stop-opacity="0.55" />
-					<stop offset="1" stop-color="#e8e6dc" stop-opacity="0" />
-				</radialGradient>
+				<!-- Reusable fluffy cloud shape (chunky multi-lobe) -->
+				<symbol id="cloud1" viewBox="-120 -50 240 100" overflow="visible">
+					<g filter="url(#cloudSoften)">
+						<!-- underside shadow -->
+						<ellipse cx="0" cy="18" rx="110" ry="14" fill="url(#cloudShadow)" />
+						<!-- main lobes -->
+						<ellipse cx="-70" cy="8" rx="45" ry="24" fill="url(#cloudBody)" />
+						<ellipse cx="-30" cy="-8" rx="55" ry="30" fill="url(#cloudBody)" />
+						<ellipse cx="20" cy="-14" rx="60" ry="34" fill="url(#cloudBody)" />
+						<ellipse cx="70" cy="0" rx="48" ry="26" fill="url(#cloudBody)" />
+						<ellipse cx="100" cy="10" rx="30" ry="18" fill="url(#cloudBody)" />
+						<!-- highlights -->
+						<ellipse cx="-28" cy="-20" rx="25" ry="9" fill="#ffffff" opacity="0.55" />
+						<ellipse cx="25" cy="-24" rx="22" ry="8" fill="#ffffff" opacity="0.5" />
+					</g>
+				</symbol>
 
-				<!-- Noise filter for overall texture -->
+				<!-- Film grain over whole scene -->
 				<filter id="grain" x="0" y="0" width="100%" height="100%">
 					<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch" />
 					<feColorMatrix type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0.18 0" />
 				</filter>
 
-				<!-- Cloud/sky turbulent wash -->
+				<!-- Sky cloud wash: higher frequency, stronger opacity for visible texture -->
 				<filter id="cloudWash" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="3" seed="3" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.95  0 0 0 0 0.94  0 0 0 0 0.9  0 0 0 0.18 -0.05" />
+					<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="3" stitchTiles="stitch" />
+					<feColorMatrix type="matrix" values="0 0 0 0 0.97  0 0 0 0 0.96  0 0 0 0 0.93  0 0 0 0.32 -0.04" />
 				</filter>
 
-				<!-- Field texture (grass-like speckle) -->
+				<!-- Fine sky grain for painterly texture -->
+				<filter id="skyGrain" x="0" y="0" width="100%" height="100%">
+					<feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="2" seed="9" stitchTiles="stitch" />
+					<feColorMatrix type="matrix" values="0 0 0 0 0.85  0 0 0 0 0.88  0 0 0 0 0.9  0 0 0 0.12 0" />
+				</filter>
+
+				<!-- Cloud soften filter -->
+				<filter id="cloudSoften" x="-20%" y="-30%" width="140%" height="160%">
+					<feGaussianBlur stdDeviation="2.2" />
+				</filter>
+
+				<!-- Field speckle -->
 				<filter id="fieldGrain" x="0" y="0" width="100%" height="100%">
 					<feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="11" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.32  0 0 0 0 0.18  0 0 0 0.22 0" />
+					<feColorMatrix type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.32  0 0 0 0 0.18  0 0 0 0.24 0" />
 				</filter>
 
-				<!-- Subtle bark texture -->
+				<!-- Hill grain: horizontal streaks -->
+				<filter id="hillGrain" x="0" y="0" width="100%" height="100%">
+					<feTurbulence type="fractalNoise" baseFrequency="0.6 0.04" numOctaves="2" seed="15" stitchTiles="stitch" />
+					<feColorMatrix type="matrix" values="0 0 0 0 0.24  0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0.25 0" />
+				</filter>
+
+				<!-- Bark texture, clipped to trunk -->
 				<filter id="barkTex" x="0" y="0" width="100%" height="100%">
 					<feTurbulence type="fractalNoise" baseFrequency="0.6 3" numOctaves="2" seed="5" />
 					<feColorMatrix type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.04  0 0 0 0.35 0" />
 					<feComposite in2="SourceGraphic" operator="in" />
 				</filter>
 
-				<!-- Soft drop shadow for figs -->
+				<!-- Fig soft shadow -->
 				<filter id="figShadow" x="-20%" y="-20%" width="140%" height="140%">
 					<feGaussianBlur stdDeviation="0.8" />
 				</filter>
 
-				<!-- Reusable fig leaf shape: palmate, 5-lobed -->
+				<!-- Trunk clip path (used by bark texture so it only paints over the trunk shape) -->
+				<clipPath id="trunkClip">
+					<path d="M 180 700
+					         C 170 560, 150 420, 180 280
+					         C 200 200, 220 140, 260 90
+					         C 275 80, 305 80, 320 95
+					         C 345 140, 360 210, 345 300
+					         C 330 420, 335 560, 345 700
+					         C 345 710, 180 712, 180 700 Z" />
+				</clipPath>
+
+				<!-- Reusable palmate fig leaf path (referenced via <use>). The
+				     three visible-leaf symbols below bake in their own gradient
+				     fills so we get depth variation across the canopy. -->
+				<path id="figLeafPath"
+					d="M 0 5
+					   C -6 0, -14 -4, -22 -8
+					   C -42 -16, -54 -26, -50 -40
+					   C -42 -46, -34 -44, -28 -38
+					   C -36 -48, -42 -58, -36 -66
+					   C -28 -68, -22 -62, -18 -54
+					   C -18 -62, -14 -72, -6 -74
+					   C 0 -70, 2 -62, 0 -54
+					   C 6 -70, 14 -76, 22 -72
+					   C 26 -64, 22 -54, 16 -48
+					   C 26 -52, 36 -50, 42 -42
+					   C 42 -32, 34 -24, 24 -20
+					   C 36 -16, 44 -8, 42 2
+					   C 34 8, 22 4, 14 -2
+					   C 10 2, 4 4, 0 5 Z"
+				/>
+				<g id="figLeafVeins">
+					<path d="M 0 5 L -4 -62" />
+					<path d="M -2 -24 L -28 -36" />
+					<path d="M -2 -24 L -18 -58" />
+					<path d="M -1 -36 L 16 -48" />
+					<path d="M -1 -36 L 14 -2" />
+					<path d="M -3 -12 L 34 -24" />
+					<path d="M -3 -12 L 24 4" />
+				</g>
+
+				<symbol id="figLeafDark" viewBox="-60 -80 120 90" overflow="visible">
+					<use href="#figLeafPath" fill="url(#foliageDark)" stroke="#1b2814" stroke-width="0.7" stroke-linejoin="round" />
+					<use href="#figLeafVeins" stroke="#1b2814" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
+				</symbol>
+				<symbol id="figLeafMid" viewBox="-60 -80 120 90" overflow="visible">
+					<use href="#figLeafPath" fill="url(#foliageMid)" stroke="#23311a" stroke-width="0.7" stroke-linejoin="round" />
+					<use href="#figLeafVeins" stroke="#23311a" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
+				</symbol>
+				<symbol id="figLeafLight" viewBox="-60 -80 120 90" overflow="visible">
+					<use href="#figLeafPath" fill="url(#foliageLight)" stroke="#2a3b20" stroke-width="0.7" stroke-linejoin="round" />
+					<use href="#figLeafVeins" stroke="#2a3b20" stroke-width="0.7" fill="none" opacity="0.6" stroke-linecap="round" />
+				</symbol>
+				<!-- Alias kept for non-canopy uses (hotspots, decorative leaves) -->
 				<symbol id="figLeaf" viewBox="-60 -80 120 90" overflow="visible">
-					<path
-						d="M 0 5
-						   C -6 0, -14 -4, -22 -8
-						   C -42 -16, -54 -26, -50 -40
-						   C -42 -46, -34 -44, -28 -38
-						   C -36 -48, -42 -58, -36 -66
-						   C -28 -68, -22 -62, -18 -54
-						   C -18 -62, -14 -72, -6 -74
-						   C 0 -70, 2 -62, 0 -54
-						   C 6 -70, 14 -76, 22 -72
-						   C 26 -64, 22 -54, 16 -48
-						   C 26 -52, 36 -50, 42 -42
-						   C 42 -32, 34 -24, 24 -20
-						   C 36 -16, 44 -8, 42 2
-						   C 34 8, 22 4, 14 -2
-						   C 10 2, 4 4, 0 5 Z"
-						fill="url(#foliage)"
-						stroke="#2a3a1f"
-						stroke-width="0.6"
-						stroke-linejoin="round"
-					/>
-					<!-- veins -->
-					<g stroke="#2a3a1f" stroke-width="0.8" fill="none" opacity="0.55" stroke-linecap="round">
-						<path d="M 0 5 L -4 -62" />
-						<path d="M -2 -24 L -28 -36" />
-						<path d="M -2 -24 L -18 -58" />
-						<path d="M -1 -36 L 16 -48" />
-						<path d="M -1 -36 L 14 -2" />
-						<path d="M -3 -12 L 34 -24" />
-						<path d="M -3 -12 L 24 4" />
-					</g>
+					<use href="#figLeafPath" fill="url(#foliageMid)" stroke="#23311a" stroke-width="0.7" stroke-linejoin="round" />
+					<use href="#figLeafVeins" stroke="#23311a" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
 				</symbol>
 
 				<!-- Reusable ripe fig: teardrop with stem + ostiole -->
 				<symbol id="ripeFig" viewBox="-30 -40 60 70" overflow="visible">
-					<!-- stem -->
 					<path d="M 0 -30 Q -2 -36, -6 -38" stroke="#3a2818" stroke-width="2" fill="none" stroke-linecap="round" />
-					<!-- shoulders + body (teardrop) -->
 					<path
 						d="M -14 -26
 						   Q -10 -30, -4 -30
@@ -152,11 +304,8 @@ import RetroWindow from '../components/RetroWindow.astro';
 						   Q -22 -16, -14 -26 Z"
 						fill="url(#figPurple)"
 					/>
-					<!-- highlight -->
 					<ellipse cx="-7" cy="-10" rx="5" ry="9" fill="#b48298" opacity="0.28" />
-					<!-- ostiole (eye at bottom) -->
 					<circle cx="0" cy="24" r="1.6" fill="#1c0a14" />
-					<!-- subtle ribs -->
 					<g stroke="#2a0f1c" stroke-width="0.5" fill="none" opacity="0.35">
 						<path d="M -14 -18 Q -10 4, -6 26" />
 						<path d="M 14 -18 Q 10 4, 6 26" />
@@ -165,37 +314,85 @@ import RetroWindow from '../components/RetroWindow.astro';
 				</symbol>
 			</defs>
 
-			<!-- Sky + field base -->
+			<!-- ============================================================
+			     SKY
+			     ============================================================ -->
 			<rect width="1440" height="560" fill="url(#sky)" />
-			<rect y="560" width="1440" height="340" fill="url(#field)" />
 
-			<!-- Soft painterly cloud wash across the sky -->
-			<rect width="1440" height="560" filter="url(#cloudWash)" opacity="0.55" />
+			<!-- Base cloud wash filter painted onto the sky for visible texture -->
+			<rect width="1440" height="500" filter="url(#cloudWash)" opacity="0.7" />
+			<!-- Fine painterly grain on the sky -->
+			<rect width="1440" height="500" filter="url(#skyGrain)" opacity="0.35" />
 
-			<!-- Distant soft clouds -->
+			<!-- Chunky XP-Bliss clouds, multiple layered positions -->
 			<g>
-				<ellipse cx="820" cy="170" rx="170" ry="32" fill="url(#cloud)" />
-				<ellipse cx="1100" cy="110" rx="130" ry="24" fill="url(#cloud)" />
-				<ellipse cx="1280" cy="220" rx="150" ry="30" fill="url(#cloud)" />
-				<ellipse cx="620" cy="240" rx="110" ry="20" fill="url(#cloud)" opacity="0.7" />
+				<use href="#cloud1" x="620" y="130" width="340" height="130" opacity="0.95" />
+				<use href="#cloud1" x="1020" y="70" width="280" height="110" opacity="0.9" />
+				<use href="#cloud1" x="1180" y="200" width="320" height="120" opacity="0.85" />
+				<use href="#cloud1" x="760" y="260" width="260" height="95" opacity="0.75" />
+				<use href="#cloud1" x="440" y="210" width="200" height="80" opacity="0.65" />
+				<use href="#cloud1" x="960" y="320" width="240" height="85" opacity="0.55" />
 			</g>
 
-			<!-- Distant hills: layered, muted, overlapping for depth -->
+			<!-- ============================================================
+			     HILLS (larger, more prominent; horizon moved up to ~440)
+			     ============================================================ -->
+			<!-- Far hills: soft, blue-tinted for aerial perspective -->
 			<path
-				d="M 0 570 Q 180 520, 360 540 T 720 545 T 1080 530 T 1440 540 L 1440 600 L 0 600 Z"
-				fill="#93a784" opacity="0.75"
+				d="M 0 470
+				   Q 140 410, 280 440
+				   Q 380 460, 500 430
+				   Q 620 400, 760 440
+				   Q 880 470, 1000 435
+				   Q 1120 405, 1260 445
+				   Q 1360 470, 1440 455
+				   L 1440 600 L 0 600 Z"
+				fill="url(#hillFar)" opacity="0.85"
 			/>
+			<!-- Mid hills with grass stroke highlights -->
 			<path
-				d="M 0 590 Q 220 555, 460 575 T 900 580 T 1200 565 T 1440 580 L 1440 615 L 0 615 Z"
-				fill="#7f9570" opacity="0.85"
+				d="M 0 520
+				   Q 160 475, 320 500
+				   Q 440 520, 580 485
+				   Q 720 455, 860 495
+				   Q 980 525, 1120 490
+				   Q 1260 460, 1440 510
+				   L 1440 620 L 0 620 Z"
+				fill="url(#hillMid)"
 			/>
+			<!-- Near rolling hill (foreground) -->
 			<path
-				d="M 0 615 Q 260 595, 520 605 T 1020 610 T 1440 605 L 1440 640 L 0 640 Z"
-				fill="#6b8260" opacity="0.95"
+				d="M 0 580
+				   Q 180 540, 360 565
+				   Q 500 585, 660 555
+				   Q 820 525, 980 570
+				   Q 1140 615, 1300 580
+				   Q 1380 565, 1440 580
+				   L 1440 900 L 0 900 Z"
+				fill="url(#field)"
 			/>
 
+			<!-- Horizontal streak texture on the far + mid hills -->
+			<g clip-path="inset(470px 0 320px 0)">
+				<rect y="440" width="1440" height="150" filter="url(#hillGrain)" opacity="0.65" />
+			</g>
+
+			<!-- Tiny distant tree-silhouettes on the far hills for scale -->
+			<g fill="#6f8568" opacity="0.55">
+				<ellipse cx="700" cy="462" rx="6" ry="8" />
+				<rect x="699" y="462" width="2" height="6" />
+				<ellipse cx="740" cy="455" rx="5" ry="7" />
+				<rect x="739" y="455" width="2" height="5" />
+				<ellipse cx="960" cy="450" rx="7" ry="9" />
+				<rect x="959" y="450" width="2" height="7" />
+				<ellipse cx="1180" cy="460" rx="6" ry="8" />
+				<rect x="1179" y="460" width="2" height="6" />
+				<ellipse cx="1260" cy="470" rx="5" ry="7" />
+				<rect x="1259" y="470" width="2" height="5" />
+			</g>
+
 			<!-- Field speckle/grass texture over ground -->
-			<rect y="560" width="1440" height="340" filter="url(#fieldGrain)" opacity="0.7" />
+			<rect y="560" width="1440" height="340" filter="url(#fieldGrain)" opacity="0.6" />
 
 			<!-- Hand-drawn grass blades scattered across the field -->
 			<g stroke="#425c33" stroke-width="1" stroke-linecap="round" opacity="0.55">
@@ -275,69 +472,45 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<ellipse cx="240" cy="360" rx="7" ry="3" />
 				<ellipse cx="295" cy="230" rx="5" ry="3" />
 			</g>
-			<!-- Apply bark texture filter over trunk area -->
-			<rect x="150" y="80" width="220" height="640" filter="url(#barkTex)" opacity="0.45" mask="url(#trunkMask)" />
+			<!-- Bark texture, clipped to the trunk shape so texture doesn't bleed -->
+			<g clip-path="url(#trunkClip)">
+				<rect x="150" y="80" width="220" height="640" filter="url(#barkTex)" opacity="0.55" />
+			</g>
 
 			<!-- Major branches radiating out -->
 			<g stroke="url(#trunk)" fill="none" stroke-linecap="round">
-				<!-- up-right big branch -->
 				<path d="M 310 180 Q 400 140, 500 110" stroke-width="22" />
 				<path d="M 310 180 Q 400 140, 500 110" stroke-width="14" stroke="#3a2818" />
-				<!-- up-left branch -->
 				<path d="M 255 130 Q 180 100, 95 80" stroke-width="20" />
 				<path d="M 255 130 Q 180 100, 95 80" stroke-width="12" stroke="#3a2818" />
-				<!-- mid-right branch -->
 				<path d="M 330 260 Q 430 240, 540 230" stroke-width="16" />
 				<path d="M 330 260 Q 430 240, 540 230" stroke-width="9" stroke="#3a2818" />
-				<!-- mid-left branch -->
 				<path d="M 180 320 Q 100 310, 30 320" stroke-width="14" />
-				<!-- lower-right branch -->
 				<path d="M 340 380 Q 470 390, 580 400" stroke-width="14" />
 				<path d="M 340 380 Q 470 390, 580 400" stroke-width="8" stroke="#3a2818" />
-				<!-- small twigs -->
 				<path d="M 500 110 Q 540 90, 580 70" stroke-width="6" />
 				<path d="M 540 230 Q 590 220, 630 215" stroke-width="5" />
 				<path d="M 95 80 Q 60 70, 20 65" stroke-width="6" />
 			</g>
 
-			<!-- Foliage clusters — big, overlapping, giving the tree menu-bar presence -->
-			<g>
-				<!-- crown center -->
-				<ellipse cx="260" cy="120" rx="210" ry="130" fill="url(#foliage)" />
-				<!-- upper right bloom -->
-				<ellipse cx="480" cy="90" rx="140" ry="95" fill="url(#foliage)" />
-				<ellipse cx="560" cy="130" rx="95" ry="70" fill="url(#foliage)" />
-				<!-- upper left bloom -->
-				<ellipse cx="110" cy="100" rx="130" ry="85" fill="url(#foliage)" />
-				<!-- mid right -->
-				<ellipse cx="510" cy="230" rx="120" ry="80" fill="url(#foliage)" />
-				<!-- mid left -->
-				<ellipse cx="70" cy="300" rx="95" ry="65" fill="url(#foliage)" />
-				<!-- lower right -->
-				<ellipse cx="550" cy="400" rx="110" ry="70" fill="url(#foliage)" />
-				<!-- crown highlights -->
-				<ellipse cx="240" cy="90" rx="80" ry="40" fill="#6e8a52" opacity="0.55" />
-				<ellipse cx="470" cy="70" rx="55" ry="30" fill="#6e8a52" opacity="0.5" />
-				<ellipse cx="100" cy="80" rx="50" ry="28" fill="#6e8a52" opacity="0.5" />
-				<ellipse cx="540" cy="390" rx="45" ry="22" fill="#6e8a52" opacity="0.5" />
-			</g>
-
-			<!-- Scattered static (non-clickable) fig leaves across the canopy for density -->
-			<g opacity="0.95">
-				<use href="#figLeaf" x="150" y="70" width="70" height="50" transform="rotate(-18 150 70)" />
-				<use href="#figLeaf" x="280" y="50" width="60" height="44" transform="rotate(12 280 50)" />
-				<use href="#figLeaf" x="380" y="95" width="70" height="50" transform="rotate(-28 380 95)" />
-				<use href="#figLeaf" x="450" y="55" width="64" height="46" transform="rotate(22 450 55)" />
-				<use href="#figLeaf" x="80" y="130" width="60" height="44" transform="rotate(-40 80 130)" />
-				<use href="#figLeaf" x="210" y="180" width="65" height="46" transform="rotate(-8 210 180)" />
-				<use href="#figLeaf" x="380" y="200" width="58" height="42" transform="rotate(35 380 200)" />
-				<use href="#figLeaf" x="490" y="280" width="62" height="44" transform="rotate(-22 490 280)" />
-				<use href="#figLeaf" x="60" y="260" width="60" height="42" transform="rotate(-55 60 260)" />
-				<use href="#figLeaf" x="180" y="360" width="55" height="40" transform="rotate(18 180 360)" />
-				<use href="#figLeaf" x="430" y="360" width="60" height="44" transform="rotate(-15 430 360)" />
-				<use href="#figLeaf" x="550" y="420" width="55" height="40" transform="rotate(28 550 420)" />
-				<use href="#figLeaf" x="320" y="30" width="52" height="38" transform="rotate(-5 320 30)" />
-				<use href="#figLeaf" x="580" y="200" width="55" height="40" transform="rotate(40 580 200)" />
+			<!-- ============================================================
+			     CANOPY — dense overlapping palmate fig leaves
+			     Built from an array of ~350 <use href="#figLeaf"> placements
+			     in 3 depth layers, each tinted via a gradient fill.
+			     The canopy SILHOUETTE itself becomes palmate because
+			     the outermost leaves' lobed shapes form the edge.
+			     ============================================================ -->
+			<g class="canopy">
+				{leaves.map((l) => (
+					<use
+						href={SHADE_SYMBOL[l.shade]}
+						x={-60}
+						y={-80}
+						width={120}
+						height={90}
+						transform={`translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.r.toFixed(1)}) scale(${l.s.toFixed(2)})`}
+					/>
+				))}
 			</g>
 
 			<!-- Static (decorative) figs scattered on the tree -->
@@ -347,67 +520,104 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<use href="#ripeFig" x="140" y="240" width="19" height="23" />
 				<use href="#ripeFig" x="510" y="340" width="18" height="22" />
 				<use href="#ripeFig" x="360" y="300" width="17" height="21" />
+				<use href="#ripeFig" x="260" y="60" width="16" height="20" />
+				<use href="#ripeFig" x="450" y="250" width="17" height="21" />
+				<use href="#ripeFig" x="100" y="180" width="18" height="22" />
 			</g>
 
 			<!-- =========================================================
-			     PERSON — seated at base of tree, leaning against trunk
+			     PERSON — seated at base of tree, enlarged + tonal
+			     Shifted right (off the trunk shadow) and scaled 1.4x.
+			     Two tonal values: #2a2117 (dark) body + #5e6f4a (shirt)
 			     ========================================================= -->
-			<g transform="translate(340, 640)">
+			<g transform="translate(365, 620) scale(1.4)">
 				<!-- ground shadow -->
-				<ellipse cx="30" cy="58" rx="75" ry="7" fill="#394a2b" opacity="0.45" />
-				<g fill="#1f1a14">
-					<!-- back/torso leaning against trunk -->
-					<path d="M -8 -10
-					         Q -14 10, -10 35
-					         Q 0 42, 14 40
-					         Q 24 32, 26 14
-					         Q 28 -8, 22 -20
-					         Q 8 -26, -8 -10 Z" />
-					<!-- head -->
-					<circle cx="10" cy="-34" r="13" />
-					<!-- neck hint -->
-					<rect x="4" y="-24" width="10" height="8" rx="2" />
-					<!-- upper leg bent (knee up) -->
-					<path d="M 10 32
-					         Q 40 20, 60 4
-					         Q 66 -4, 60 -10
-					         Q 50 -10, 40 0
-					         Q 22 14, 6 28 Z" />
-					<!-- lower leg extended -->
-					<path d="M 54 -6
-					         Q 78 8, 96 30
-					         Q 100 38, 94 42
-					         Q 80 38, 62 22
-					         Q 50 10, 48 0 Z" />
-					<!-- shoe -->
-					<ellipse cx="100" cy="38" rx="9" ry="4" />
-					<!-- other leg folded in -->
-					<path d="M 6 32
-					         Q 20 48, 44 52
-					         Q 50 54, 50 58
-					         Q 30 60, 10 52
-					         Q -4 46, -6 38 Z" />
-					<!-- arm resting on knee -->
-					<path d="M 20 0
-					         Q 40 4, 52 14
-					         Q 56 18, 52 22
-					         Q 38 18, 22 10 Z" />
-					<!-- hair tuft -->
-					<path d="M -1 -42 Q 10 -48, 22 -42 Q 20 -38, 10 -40 Q 2 -40, -1 -42 Z" fill="#0e0a06" />
+				<ellipse cx="28" cy="60" rx="82" ry="8" fill="#394a2b" opacity="0.5" />
+
+				<!-- extended leg (back) - drawn first so other limbs overlap -->
+				<g fill="#2a2117">
+					<path d="M 34 10
+					         Q 64 24, 86 42
+					         Q 92 48, 86 52
+					         Q 72 50, 52 38
+					         Q 36 28, 30 18 Z" />
+					<!-- shoe on extended leg -->
+					<ellipse cx="92" cy="48" rx="11" ry="5" fill="#1a130c" />
 				</g>
+
+				<!-- bent knee (front leg) - pants dark -->
+				<path d="M 4 28
+				         Q 28 16, 48 -2
+				         Q 54 -10, 46 -14
+				         Q 36 -12, 24 0
+				         Q 6 16, -4 26 Z"
+					fill="#2a2117"
+				/>
+				<!-- shoe at bent knee tip -->
+				<ellipse cx="48" cy="-10" rx="8" ry="4" fill="#1a130c" transform="rotate(-25 48 -10)" />
+
+				<!-- torso (shirt: olive/sage so it separates from trunk) -->
+				<path d="M -10 -8
+				         Q -16 14, -8 34
+				         Q 4 40, 18 36
+				         Q 28 26, 28 8
+				         Q 26 -10, 18 -20
+				         Q 4 -22, -10 -8 Z"
+					fill="#5e6f4a"
+				/>
+				<!-- shirt collar/shadow band -->
+				<path d="M -8 -14
+				         Q 2 -20, 18 -18
+				         Q 22 -10, 16 -6
+				         Q 4 -4, -8 -8 Z"
+					fill="#485638"
+				/>
+				<!-- arm resting on bent knee (shirt color, with darker forearm) -->
+				<path d="M 18 -4
+				         Q 36 0, 46 8
+				         Q 48 12, 44 14
+				         Q 30 12, 16 4 Z"
+					fill="#5e6f4a"
+				/>
+				<path d="M 38 10
+				         Q 48 14, 54 20
+				         Q 52 24, 46 22
+				         Q 36 18, 32 14 Z"
+					fill="#2a2117"
+				/>
+
+				<!-- neck -->
+				<rect x="4" y="-24" width="10" height="10" rx="2" fill="#7a5a42" />
+
+				<!-- head (skin-tone warm brown, distinct from shirt and trunk) -->
+				<circle cx="10" cy="-34" r="13" fill="#8a6a4c" />
+				<!-- ear hint -->
+				<ellipse cx="-2" cy="-33" rx="2" ry="3" fill="#6a4e38" />
+				<!-- hair: darker than skin, covers crown -->
+				<path d="M -3 -44
+				         Q 10 -52, 23 -42
+				         Q 24 -36, 20 -34
+				         Q 14 -38, 10 -38
+				         Q 4 -38, -2 -34
+				         Q -5 -38, -3 -44 Z"
+					fill="#1a130c"
+				/>
+
+				<!-- subtle leg separation line between bent + extended legs -->
+				<path d="M 4 28 Q 16 24, 30 18" stroke="#1a130c" stroke-width="1.5" fill="none" opacity="0.5" />
 			</g>
 
 			<!-- =========================================================
 			     CLICKABLE HOTSPOTS — figs + leaves on the tree
 			     ========================================================= -->
 			<g class="leaves">
-				<g class="hotspot" data-window="notes" transform="translate(495 115) rotate(15) scale(1.1)">
-					<use href="#figLeaf" x="-55" y="-78" width="110" height="84" />
-					<circle cx="0" cy="-38" r="44" fill="transparent" />
+				<g class="hotspot" data-window="notes" transform="translate(520 110) rotate(15) scale(1.3)">
+					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
+					<circle cx="0" cy="-40" r="48" fill="transparent" />
 				</g>
-				<g class="hotspot" data-window="contact" transform="translate(90 110) rotate(-35) scale(1.05)">
-					<use href="#figLeaf" x="-55" y="-78" width="110" height="84" />
-					<circle cx="0" cy="-38" r="42" fill="transparent" />
+				<g class="hotspot" data-window="contact" transform="translate(70 120) rotate(-35) scale(1.25)">
+					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
+					<circle cx="0" cy="-40" r="46" fill="transparent" />
 				</g>
 			</g>
 
@@ -422,7 +632,6 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<g class="hotspot" data-window="projects">
 					<g transform="translate(170 380) scale(1.35)" filter="url(#figShadow)">
 						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
-						<!-- second fig in a pair -->
 						<use href="#ripeFig" x="8" y="-22" width="36" height="44" />
 					</g>
 					<circle cx="175" cy="380" r="32" fill="transparent" />
@@ -437,7 +646,7 @@ import RetroWindow from '../components/RetroWindow.astro';
 			</g>
 
 			<!-- Overall film grain pass on top of everything -->
-			<rect width="1440" height="900" filter="url(#grain)" opacity="0.35" pointer-events="none" />
+			<rect width="1440" height="900" filter="url(#grain)" opacity="0.3" pointer-events="none" />
 		</svg>
 
 		<!-- Windows -->
@@ -487,7 +696,7 @@ import RetroWindow from '../components/RetroWindow.astro';
 		transform-origin: center;
 	}
 	.hotspot:hover {
-		filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 236, 190, 0.75));
+		filter: brightness(1.18) drop-shadow(0 0 8px rgba(255, 236, 190, 0.75));
 	}
 </style>
 
