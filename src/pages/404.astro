@@ -153,6 +153,10 @@ import Base from '../layouts/Base.astro';
 		text-decoration: none;
 	}
 	.back:hover { background: #dcd5c4; }
+	.back:focus-visible {
+		outline: 2px dashed #3a5070;
+		outline-offset: 3px;
+	}
 
 	@media (max-width: 640px) {
 		.page { padding: 2rem 1rem 3rem; }

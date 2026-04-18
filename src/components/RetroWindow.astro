@@ -82,6 +82,11 @@ const { id, title, x = 60, y = 80, ackLabel } = Astro.props;
 		color: inherit;
 	}
 	.close:hover { background: #dcd5c4; }
+	.close:focus-visible,
+	.ack:focus-visible {
+		outline: 2px dashed #3a5070;
+		outline-offset: 2px;
+	}
 	.body {
 		padding: 1.5rem 1.75rem;
 		line-height: 1.65;
@@ -111,12 +116,34 @@ const { id, title, x = 60, y = 80, ackLabel } = Astro.props;
 	.ack:hover { background: #dcd5c4; }
 
 	@media (max-width: 640px) {
+		/* Center window in viewport regardless of the original x/y props
+		   (which were tuned for desktop). Using transform+top:50% centers
+		   cleanly; on small screens we also let the window grow toward the
+		   full viewport width with sane margins. */
 		.window {
-			left: 1rem !important;
-			right: 1rem !important;
-			top: 5rem !important;
-			max-width: none;
-			width: auto;
+			left: 50% !important;
+			top: 50% !important;
+			right: auto !important;
+			transform: translate(-50%, -50%);
+			width: calc(100vw - 2rem);
+			max-width: 420px;
+			max-height: calc(100vh - 2rem);
+			overflow-y: auto;
+		}
+		.close {
+			/* Larger tap target on mobile (>= 32px — comfortably above 24px
+			   minimum; the whole titlebar is 44px+ tall so the row itself
+			   is touch-friendly). */
+			width: 32px;
+			height: 32px;
+			font-size: 1.3rem;
+		}
+		.ack {
+			padding: 0.6rem 2rem;
+			min-height: 44px;
+		}
+		.body {
+			padding: 1.25rem 1.25rem;
 		}
 	}
 </style>

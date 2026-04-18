@@ -207,9 +207,11 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 		<svg
 			class="landscape"
 			viewBox="0 0 1440 900"
-			preserveAspectRatio="xMidYMid slice"
+			preserveAspectRatio="xMinYMid slice"
 			role="img"
 			aria-labelledby="sceneDesc"
+			data-desktop-viewbox="0 0 1440 900"
+			data-mobile-viewbox="-20 -30 720 930"
 		>
 			<desc id="sceneDesc">
 				A large fig tree occupies the left side of a muted landscape. A person sits beneath it, looking out over sage hills under a soft blue sky. Figs and fig leaves on the tree are interactive.
@@ -914,6 +916,21 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 		overflow: hidden;
 		background: #0a0a0a;
 	}
+	/* On mobile the SVG is `meet`-fit (letterboxed top/bottom) so the
+	   rect background shows through. Match it to the scene's sky→hill
+	   palette so the letterbox blends with the painting. */
+	@media (max-width: 640px) {
+		.scene {
+			background: linear-gradient(
+				to bottom,
+				#8ca8bf 0%,
+				#afc4d2 20%,
+				#d6dcd6 50%,
+				#8aa181 55%,
+				#617955 100%
+			);
+		}
+	}
 	.landscape {
 		width: 100%;
 		height: 100%;
@@ -935,6 +952,8 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 	.hotspot:focus-visible {
 		filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 236, 190, 0.9));
 		transform: scale(1.06);
+		outline: 2px dashed #3a5070;
+		outline-offset: 4px;
 	}
 	/* Warm rim on interactive leaves so a user intuits they're clickable */
 	.hotspot-leaf use {
@@ -1006,6 +1025,50 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 	if (scene) {
 		let topZ = 10;
 
+		// === Mobile scene adaptation ==========================================
+		// The scene was composed for a 1440×900 viewBox with the tree in
+		// x=0..620. On a narrow (≤ 640px) viewport we zoom into that left
+		// slab so the tree + person + lower hills dominate instead of being
+		// letterboxed or cropped oddly. We also enlarge every hotspot's
+		// transparent hit-target circle so each tap target is ≥ 44px CSS.
+		const svg = scene.querySelector<SVGSVGElement>('svg.landscape');
+		const mobileQuery = window.matchMedia('(max-width: 640px)');
+		const applyMobileScene = (isMobile: boolean) => {
+			if (!svg) return;
+			const desktopVB = svg.dataset.desktopViewbox || '0 0 1440 900';
+			const mobileVB = svg.dataset.mobileViewbox || '-20 -30 720 930';
+			svg.setAttribute('viewBox', isMobile ? mobileVB : desktopVB);
+			// On mobile, `meet` shows the entire tree + hotspots (letterboxed
+			// by the `.scene` sky-matching background). On desktop we keep
+			// `xMinYMid slice` so the left-anchored tree stays in place.
+			svg.setAttribute(
+				'preserveAspectRatio',
+				isMobile ? 'xMidYMid meet' : 'xMinYMid slice',
+			);
+			// Bump hit-target circles (the transparent <circle> inside each
+			// hotspot group) so touch areas clear the 44×44 Apple guideline.
+			// Mobile shows a 720×930 viewBox letterboxed in 375×812, so each
+			// SVG unit ≈ 0.52 CSS px — a 26-unit circle = ~13.5 CSS px before
+			// bumping. We push r to 48 on mobile, which renders ~25 CSS px
+			// radius ≈ 50 CSS px diameter.
+			scene
+				.querySelectorAll<SVGCircleElement>('.hotspot > circle')
+				.forEach((c) => {
+					if (isMobile) {
+						if (!c.dataset.origR) {
+							c.dataset.origR = c.getAttribute('r') || '';
+						}
+						c.setAttribute('r', '48');
+					} else if (c.dataset.origR) {
+						c.setAttribute('r', c.dataset.origR);
+					}
+				});
+		};
+		applyMobileScene(mobileQuery.matches);
+		if ('addEventListener' in mobileQuery) {
+			mobileQuery.addEventListener('change', (e) => applyMobileScene(e.matches));
+		}
+
 		const bringToFront = (el: HTMLElement) => {
 			topZ += 1;
 			el.style.zIndex = String(topZ);
@@ -1052,6 +1115,10 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			}, 1800);
 		}
 
+		// Drag is disabled on narrow viewports — windows are centered via CSS
+		// and overriding `left/top` with per-pixel values would fight that.
+		const mobileMq = window.matchMedia('(max-width: 640px)');
+
 		scene.querySelectorAll<HTMLElement>('.window').forEach((win) => {
 			win.addEventListener('mousedown', () => bringToFront(win));
 
@@ -1069,6 +1136,7 @@ const foreBodyLeaves = bodyLeaves.filter((l) => l.shade !== 0);
 			let offsetY = 0;
 
 			handle.addEventListener('mousedown', (e) => {
+				if (mobileMq.matches) return;
 				if ((e.target as HTMLElement).closest('[data-close]')) return;
 				dragging = true;
 				const rect = win.getBoundingClientRect();
