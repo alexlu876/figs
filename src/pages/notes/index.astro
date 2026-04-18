@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const notes = (await getCollection('notes')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Base title="notes · figtre.es">
+	<main>
+		<header>
+			<a href="/">figtre.es</a>
+			<h1>notes</h1>
+		</header>
+		<ul>
+			{notes.map((n) => (
+				<li>
+					<a href={`/notes/${n.id}`}>{n.data.title}</a>
+					<time datetime={n.data.date.toISOString()}>{fmt(n.data.date)}</time>
+				</li>
+			))}
+		</ul>
+	</main>
+</Base>
+
+<style>
+	main {
+		max-width: 36rem;
+		margin: 0 auto;
+		padding: 4rem 2rem;
+	}
+	header a {
+		opacity: 0.6;
+		text-decoration: none;
+		font-size: 0.9rem;
+	}
+	h1 {
+		font-size: 2.5rem;
+		font-weight: 400;
+		letter-spacing: -0.02em;
+		margin: 1rem 0 2rem;
+	}
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	li {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.75rem 0;
+		border-bottom: 1px solid rgba(245, 245, 240, 0.1);
+	}
+	li a {
+		text-decoration: none;
+	}
+	li a:hover {
+		text-decoration: underline;
+	}
+	time {
+		opacity: 0.5;
+		font-size: 0.9rem;
+		font-variant-numeric: tabular-nums;
+	}
+</style>

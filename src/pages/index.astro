@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base>
+	<main>
+		<h1>figtre.es</h1>
+		<p>Something is growing here.</p>
+	</main>
+</Base>
+
+<style>
+	main {
+		min-height: 100vh;
+		display: grid;
+		place-items: center;
+		text-align: center;
+		padding: 2rem;
+	}
+	h1 {
+		font-size: clamp(3rem, 10vw, 6rem);
+		margin: 0;
+		font-weight: 400;
+		letter-spacing: -0.03em;
+	}
+	p {
+		opacity: 0.6;
+		font-size: 1.1rem;
+		margin-top: 1rem;
+	}
+</style>
