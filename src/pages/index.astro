@@ -10,36 +10,25 @@ type Leaf = { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 };
 const SHADE_SYMBOL = ['#figLeafDark', '#figLeafMid', '#figLeafLight'] as const;
 
 const leaves: Leaf[] = [
-	// Upper rim (clockwise from upper-left)
-	{ x: 70, y: 110, r: -70, s: 1.3, shade: 2 },
+	// Upper rim
 	{ x: 130, y: 60, r: -40, s: 1.6, shade: 2 },
-	{ x: 210, y: 35, r: -15, s: 1.7, shade: 2 },
-	{ x: 290, y: 25, r: 5, s: 1.8, shade: 2 },
-	{ x: 375, y: 40, r: 25, s: 1.6, shade: 2 },
+	{ x: 230, y: 30, r: -10, s: 1.7, shade: 2 },
+	{ x: 340, y: 35, r: 18, s: 1.6, shade: 2 },
 	{ x: 450, y: 70, r: 50, s: 1.5, shade: 2 },
-	{ x: 520, y: 115, r: 75, s: 1.4, shade: 2 },
 	// Right rim
-	{ x: 570, y: 190, r: 100, s: 1.3, shade: 1 },
-	{ x: 585, y: 265, r: 125, s: 1.3, shade: 2 },
+	{ x: 575, y: 200, r: 105, s: 1.3, shade: 2 },
 	{ x: 555, y: 340, r: 150, s: 1.3, shade: 1 },
 	// Bottom arc
-	{ x: 480, y: 395, r: 175, s: 1.3, shade: 2 },
-	{ x: 390, y: 420, r: -175, s: 1.2, shade: 1 },
-	{ x: 290, y: 430, r: 180, s: 1.2, shade: 2 },
-	{ x: 190, y: 410, r: -170, s: 1.2, shade: 1 },
+	{ x: 430, y: 415, r: -175, s: 1.25, shade: 2 },
+	{ x: 240, y: 425, r: 180, s: 1.2, shade: 2 },
 	// Left rim
-	{ x: 100, y: 365, r: -145, s: 1.3, shade: 2 },
-	{ x: 40, y: 290, r: -115, s: 1.3, shade: 1 },
-	{ x: 25, y: 215, r: -95, s: 1.3, shade: 2 },
-	// Interior accent leaves (poking out of the blob mass)
-	{ x: 200, y: 140, r: -20, s: 1.0, shade: 2 },
-	{ x: 320, y: 120, r: 10, s: 1.05, shade: 2 },
-	{ x: 430, y: 155, r: 35, s: 1.0, shade: 2 },
-	{ x: 160, y: 220, r: -55, s: 0.95, shade: 2 },
-	{ x: 360, y: 240, r: 25, s: 1.0, shade: 2 },
-	{ x: 460, y: 260, r: 55, s: 0.95, shade: 2 },
-	{ x: 260, y: 315, r: 170, s: 1.0, shade: 2 },
-	{ x: 380, y: 355, r: 195, s: 1.05, shade: 2 }
+	{ x: 70, y: 335, r: -135, s: 1.3, shade: 2 },
+	{ x: 25, y: 220, r: -95, s: 1.3, shade: 2 },
+	// Interior accent leaves
+	{ x: 300, y: 120, r: 0, s: 1.05, shade: 2 },
+	{ x: 190, y: 200, r: -45, s: 1.0, shade: 2 },
+	{ x: 420, y: 220, r: 45, s: 1.0, shade: 2 },
+	{ x: 330, y: 330, r: 175, s: 1.0, shade: 2 }
 ];
 ---
 
@@ -552,16 +541,18 @@ const leaves: Leaf[] = [
 				))}
 			</g>
 
-			<!-- Static (decorative) figs scattered on the tree -->
+			<!-- Static (decorative) figs scattered on the tree — each with
+			     a small random-looking tilt around its own center so stems
+			     remain pointing roughly up (i.e. figs hang downward). -->
 			<g opacity="0.95">
-				<use href="#ripeFig" x="200" y="150" width="20" height="24" />
-				<use href="#ripeFig" x="400" y="170" width="18" height="22" />
-				<use href="#ripeFig" x="140" y="240" width="19" height="23" />
-				<use href="#ripeFig" x="510" y="340" width="18" height="22" />
-				<use href="#ripeFig" x="360" y="300" width="17" height="21" />
-				<use href="#ripeFig" x="260" y="60" width="16" height="20" />
-				<use href="#ripeFig" x="450" y="250" width="17" height="21" />
-				<use href="#ripeFig" x="100" y="180" width="18" height="22" />
+				<use href="#ripeFig" x="200" y="150" width="20" height="24" transform="rotate(-14 210 162)" />
+				<use href="#ripeFig" x="400" y="170" width="18" height="22" transform="rotate(8 409 181)" />
+				<use href="#ripeFig" x="140" y="240" width="19" height="23" transform="rotate(16 149.5 251.5)" />
+				<use href="#ripeFig" x="510" y="340" width="18" height="22" transform="rotate(-7 519 351)" />
+				<use href="#ripeFig" x="360" y="300" width="17" height="21" transform="rotate(19 368.5 310.5)" />
+				<use href="#ripeFig" x="260" y="60" width="16" height="20" transform="rotate(-12 268 70)" />
+				<use href="#ripeFig" x="450" y="250" width="17" height="21" transform="rotate(5 458.5 260.5)" />
+				<use href="#ripeFig" x="100" y="180" width="18" height="22" transform="rotate(-9 109 191)" />
 			</g>
 
 			<!-- =========================================================
@@ -678,7 +669,7 @@ const leaves: Leaf[] = [
 					<title>about</title>
 					<g transform="translate(300 200) scale(1.3)" filter="url(#figShadow)">
 						<g class="pulse-target">
-							<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
+							<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(6 0 -4)" />
 						</g>
 					</g>
 					<circle cx="300" cy="200" r="26" fill="transparent" />
@@ -687,8 +678,8 @@ const leaves: Leaf[] = [
 				<g class="hotspot" data-window="projects" tabindex="0" role="button" aria-label="Open projects">
 					<title>projects</title>
 					<g transform="translate(170 380) scale(1.35)" filter="url(#figShadow)">
-						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
-						<use href="#ripeFig" x="8" y="-22" width="36" height="44" />
+						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(-14 0 -4)" />
+						<use href="#ripeFig" x="8" y="-22" width="36" height="44" transform="rotate(11 26 0)" />
 					</g>
 					<circle cx="175" cy="380" r="32" fill="transparent" />
 				</g>
@@ -696,7 +687,7 @@ const leaves: Leaf[] = [
 				<g class="hotspot" data-window="now" tabindex="0" role="button" aria-label="Open now">
 					<title>now</title>
 					<g transform="translate(460 340) scale(1.25)" filter="url(#figShadow)">
-						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" />
+						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(13 0 -4)" />
 					</g>
 					<circle cx="460" cy="340" r="26" fill="transparent" />
 				</g>
