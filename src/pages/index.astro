@@ -28,15 +28,30 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<!-- Dithered sky: classic GBA/DS 2x2 checkerboard blending two
 				     blues for a low-bit look. Two bands — upper and horizon —
 				     give a sense of atmospheric depth. -->
+				<pattern id="skyTop" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#6a98b8" />
+					<rect x="0" y="0" width="1" height="1" fill="#82adc7" />
+					<rect x="1" y="1" width="1" height="1" fill="#82adc7" />
+				</pattern>
 				<pattern id="skyHi" width="2" height="2" patternUnits="userSpaceOnUse">
 					<rect width="2" height="2" fill="#7ea6c2" />
 					<rect x="0" y="0" width="1" height="1" fill="#95bcd2" />
 					<rect x="1" y="1" width="1" height="1" fill="#95bcd2" />
 				</pattern>
+				<pattern id="skyMid" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#9abcce" />
+					<rect x="0" y="0" width="1" height="1" fill="#b1ccda" />
+					<rect x="1" y="1" width="1" height="1" fill="#b1ccda" />
+				</pattern>
 				<pattern id="skyLo" width="2" height="2" patternUnits="userSpaceOnUse">
 					<rect width="2" height="2" fill="#b5ccd8" />
 					<rect x="0" y="0" width="1" height="1" fill="#cedae2" />
 					<rect x="1" y="1" width="1" height="1" fill="#cedae2" />
+				</pattern>
+				<pattern id="skyHaze" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#d8dfe0" />
+					<rect x="0" y="0" width="1" height="1" fill="#e7ebe8" />
+					<rect x="1" y="1" width="1" height="1" fill="#e7ebe8" />
 				</pattern>
 
 				<!-- Dithered grass field -->
@@ -46,7 +61,14 @@ import RetroWindow from '../components/RetroWindow.astro';
 					<rect x="1" y="1" width="1" height="1" fill="#7d9e5c" />
 				</pattern>
 
-				<!-- Dithered far + mid hill shades -->
+				<!-- Distant mountain silhouette (desaturated cool purple, aerial perspective) -->
+				<pattern id="mountFar" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#7b839a" />
+					<rect x="0" y="0" width="1" height="1" fill="#8c94a8" />
+					<rect x="1" y="1" width="1" height="1" fill="#8c94a8" />
+				</pattern>
+
+				<!-- Three hill-distance shades: far (lightest) → mid → near (deepest) -->
 				<pattern id="hillFar" width="2" height="2" patternUnits="userSpaceOnUse">
 					<rect width="2" height="2" fill="#8ba17a" />
 					<rect x="0" y="0" width="1" height="1" fill="#a0b68d" />
@@ -56,6 +78,11 @@ import RetroWindow from '../components/RetroWindow.astro';
 					<rect width="2" height="2" fill="#789066" />
 					<rect x="0" y="0" width="1" height="1" fill="#8aa478" />
 					<rect x="1" y="1" width="1" height="1" fill="#8aa478" />
+				</pattern>
+				<pattern id="hillNear" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#5e7e50" />
+					<rect x="0" y="0" width="1" height="1" fill="#6e8c5e" />
+					<rect x="1" y="1" width="1" height="1" fill="#6e8c5e" />
 				</pattern>
 
 				<!-- Ripe fig pixel sprite (8x10). Integer coords only. -->
@@ -105,61 +132,193 @@ import RetroWindow from '../components/RetroWindow.astro';
 				</symbol>
 			</defs>
 
-			<!-- ========== SKY ========== -->
-			<rect width="480" height="90" fill="url(#skyHi)" />
-			<rect y="90" width="480" height="40" fill="url(#skyLo)" />
+			<!-- ========== SKY (layered bands with dithered transitions) ========== -->
+			<rect width="480" height="28" fill="url(#skyTop)" />
+			<rect y="28" width="480" height="40" fill="url(#skyHi)" />
+			<rect y="68" width="480" height="30" fill="url(#skyMid)" />
+			<rect y="98" width="480" height="16" fill="url(#skyLo)" />
+			<!-- Horizon haze: bright pale band right above distant hills -->
+			<rect y="114" width="480" height="6" fill="url(#skyHaze)" />
 
-			<!-- ========== CLOUDS (pixel-stacked) ========== -->
-			<g class="drift drift-a" fill="#ffffff">
-				<rect x="280" y="22" width="28" height="3" />
-				<rect x="274" y="25" width="40" height="4" />
-				<rect x="280" y="29" width="28" height="3" />
-			</g>
-			<rect x="282" y="32" width="24" height="1" fill="#b4c5cf" />
-
-			<g class="drift drift-b" fill="#ffffff">
-				<rect x="380" y="40" width="22" height="3" />
-				<rect x="376" y="43" width="32" height="4" />
-				<rect x="380" y="47" width="22" height="3" />
-			</g>
-			<rect x="380" y="50" width="22" height="1" fill="#b4c5cf" />
-
-			<g class="drift drift-c" fill="#ffffff">
-				<rect x="356" y="70" width="20" height="2" />
-				<rect x="352" y="72" width="28" height="3" />
-				<rect x="356" y="75" width="20" height="2" />
-			</g>
-
-			<!-- ========== HILLS ========== -->
-			<!-- Far hill (light sage) -->
+			<!-- ========== DISTANT MOUNTAINS ========== -->
+			<!-- Small purple-blue silhouettes behind the hills for depth -->
 			<g>
-				<rect x="0" y="130" width="80" height="40" fill="url(#hillFar)" />
-				<rect x="0" y="126" width="50" height="4" fill="url(#hillFar)" />
-				<rect x="80" y="134" width="80" height="36" fill="url(#hillFar)" />
-				<rect x="120" y="130" width="40" height="4" fill="url(#hillFar)" />
-				<rect x="160" y="132" width="100" height="38" fill="url(#hillFar)" />
-				<rect x="200" y="128" width="60" height="4" fill="url(#hillFar)" />
-				<rect x="260" y="136" width="100" height="34" fill="url(#hillFar)" />
-				<rect x="300" y="132" width="40" height="4" fill="url(#hillFar)" />
-				<rect x="360" y="130" width="120" height="40" fill="url(#hillFar)" />
-				<rect x="410" y="126" width="50" height="4" fill="url(#hillFar)" />
+				<!-- mountain 1: centerish-left -->
+				<rect x="100" y="112" width="4" height="2" fill="url(#mountFar)" />
+				<rect x="96" y="114" width="14" height="2" fill="url(#mountFar)" />
+				<rect x="92" y="116" width="22" height="2" fill="url(#mountFar)" />
+				<rect x="88" y="118" width="30" height="2" fill="url(#mountFar)" />
+				<rect x="84" y="120" width="38" height="2" fill="url(#mountFar)" />
+				<!-- mountain 2: right of center, taller -->
+				<rect x="220" y="108" width="4" height="2" fill="url(#mountFar)" />
+				<rect x="216" y="110" width="12" height="2" fill="url(#mountFar)" />
+				<rect x="212" y="112" width="20" height="2" fill="url(#mountFar)" />
+				<rect x="208" y="114" width="28" height="2" fill="url(#mountFar)" />
+				<rect x="204" y="116" width="36" height="2" fill="url(#mountFar)" />
+				<rect x="200" y="118" width="44" height="2" fill="url(#mountFar)" />
+				<rect x="196" y="120" width="52" height="2" fill="url(#mountFar)" />
+				<!-- mountain 3: right side -->
+				<rect x="330" y="114" width="4" height="2" fill="url(#mountFar)" />
+				<rect x="326" y="116" width="14" height="2" fill="url(#mountFar)" />
+				<rect x="322" y="118" width="22" height="2" fill="url(#mountFar)" />
+				<rect x="318" y="120" width="30" height="2" fill="url(#mountFar)" />
+				<!-- mountain 4: far right -->
+				<rect x="420" y="116" width="4" height="2" fill="url(#mountFar)" />
+				<rect x="416" y="118" width="14" height="2" fill="url(#mountFar)" />
+				<rect x="412" y="120" width="22" height="2" fill="url(#mountFar)" />
 			</g>
-			<!-- Distant tree silhouettes on far hill (tiny stepped shapes) -->
+
+			<!-- ========== CLOUDS (3-layer shading: highlight, body, shadow) ========== -->
+			<!-- Cloud A: large, upper right -->
+			<g class="drift drift-a">
+				<!-- highlight row -->
+				<rect x="282" y="20" width="24" height="1" fill="#ffffff" />
+				<!-- body -->
+				<rect x="278" y="21" width="32" height="2" fill="#ffffff" />
+				<rect x="274" y="23" width="40" height="4" fill="#ffffff" />
+				<rect x="278" y="27" width="32" height="2" fill="#ffffff" />
+				<!-- shadow rows -->
+				<rect x="278" y="29" width="32" height="1" fill="#c3d2dc" />
+				<rect x="282" y="30" width="24" height="1" fill="#a9bcc8" />
+			</g>
+
+			<!-- Cloud B: medium, right side -->
+			<g class="drift drift-b">
+				<rect x="388" y="40" width="16" height="1" fill="#ffffff" />
+				<rect x="384" y="41" width="24" height="2" fill="#ffffff" />
+				<rect x="380" y="43" width="32" height="3" fill="#ffffff" />
+				<rect x="384" y="46" width="24" height="1" fill="#ffffff" />
+				<rect x="384" y="47" width="24" height="1" fill="#c3d2dc" />
+				<rect x="388" y="48" width="16" height="1" fill="#a9bcc8" />
+			</g>
+
+			<!-- Cloud C: small, mid-height — faded (further back) -->
+			<g class="drift drift-c">
+				<rect x="356" y="70" width="16" height="1" fill="#e6eef2" />
+				<rect x="352" y="71" width="24" height="2" fill="#e6eef2" />
+				<rect x="356" y="73" width="16" height="1" fill="#e6eef2" />
+				<rect x="356" y="74" width="16" height="1" fill="#b9cad4" />
+			</g>
+
+			<!-- Cloud D: wispy streak near horizon -->
+			<g class="drift drift-a">
+				<rect x="140" y="86" width="28" height="1" fill="#e6eef2" />
+				<rect x="136" y="87" width="36" height="1" fill="#f4f7f8" />
+				<rect x="140" y="88" width="28" height="1" fill="#cedae2" />
+			</g>
+
+			<!-- Cloud E: small tuft, center-left -->
+			<g class="drift drift-b">
+				<rect x="60" y="32" width="10" height="1" fill="#ffffff" />
+				<rect x="56" y="33" width="18" height="2" fill="#ffffff" />
+				<rect x="60" y="35" width="10" height="1" fill="#c3d2dc" />
+			</g>
+
+			<!-- ========== HILLS (wavier, stepped silhouettes) ========== -->
+			<!-- Far hills: light sage, 2-3 px steps, undulating profile -->
+			<g>
+				<rect x="0" y="122" width="30" height="48" fill="url(#hillFar)" />
+				<rect x="14" y="120" width="20" height="2" fill="url(#hillFar)" />
+				<rect x="22" y="118" width="10" height="2" fill="url(#hillFar)" />
+				<rect x="30" y="124" width="34" height="46" fill="url(#hillFar)" />
+				<rect x="42" y="122" width="18" height="2" fill="url(#hillFar)" />
+				<rect x="64" y="126" width="36" height="44" fill="url(#hillFar)" />
+				<rect x="72" y="124" width="22" height="2" fill="url(#hillFar)" />
+				<rect x="100" y="124" width="34" height="46" fill="url(#hillFar)" />
+				<rect x="108" y="122" width="22" height="2" fill="url(#hillFar)" />
+				<rect x="114" y="120" width="12" height="2" fill="url(#hillFar)" />
+				<rect x="134" y="128" width="36" height="42" fill="url(#hillFar)" />
+				<rect x="146" y="126" width="18" height="2" fill="url(#hillFar)" />
+				<rect x="170" y="124" width="38" height="46" fill="url(#hillFar)" />
+				<rect x="182" y="122" width="20" height="2" fill="url(#hillFar)" />
+				<rect x="188" y="120" width="10" height="2" fill="url(#hillFar)" />
+				<rect x="208" y="126" width="44" height="44" fill="url(#hillFar)" />
+				<rect x="216" y="124" width="30" height="2" fill="url(#hillFar)" />
+				<rect x="228" y="122" width="14" height="2" fill="url(#hillFar)" />
+				<rect x="252" y="128" width="38" height="42" fill="url(#hillFar)" />
+				<rect x="264" y="126" width="20" height="2" fill="url(#hillFar)" />
+				<rect x="290" y="124" width="42" height="46" fill="url(#hillFar)" />
+				<rect x="300" y="122" width="26" height="2" fill="url(#hillFar)" />
+				<rect x="306" y="120" width="14" height="2" fill="url(#hillFar)" />
+				<rect x="332" y="128" width="32" height="42" fill="url(#hillFar)" />
+				<rect x="342" y="126" width="16" height="2" fill="url(#hillFar)" />
+				<rect x="364" y="124" width="42" height="46" fill="url(#hillFar)" />
+				<rect x="374" y="122" width="26" height="2" fill="url(#hillFar)" />
+				<rect x="380" y="120" width="14" height="2" fill="url(#hillFar)" />
+				<rect x="406" y="126" width="38" height="44" fill="url(#hillFar)" />
+				<rect x="416" y="124" width="22" height="2" fill="url(#hillFar)" />
+				<rect x="444" y="122" width="36" height="48" fill="url(#hillFar)" />
+				<rect x="452" y="120" width="22" height="2" fill="url(#hillFar)" />
+				<rect x="458" y="118" width="12" height="2" fill="url(#hillFar)" />
+			</g>
+
+			<!-- Tree silhouettes on far hills (tiny pixel trees) -->
 			<g fill="#5e7550">
-				<rect x="186" y="126" width="3" height="4" />
-				<rect x="185" y="128" width="5" height="2" />
-				<rect x="260" y="132" width="3" height="4" />
-				<rect x="392" y="126" width="4" height="4" />
-				<rect x="391" y="128" width="6" height="2" />
+				<rect x="26" y="116" width="2" height="4" />
+				<rect x="24" y="118" width="6" height="2" />
+				<rect x="116" y="118" width="2" height="2" />
+				<rect x="115" y="119" width="4" height="1" />
+				<rect x="192" y="116" width="2" height="4" />
+				<rect x="190" y="118" width="6" height="2" />
+				<rect x="242" y="120" width="2" height="2" />
+				<rect x="310" y="116" width="2" height="4" />
+				<rect x="308" y="118" width="6" height="2" />
+				<rect x="384" y="118" width="2" height="2" />
+				<rect x="383" y="119" width="4" height="1" />
+				<rect x="462" y="114" width="2" height="4" />
+				<rect x="460" y="116" width="6" height="2" />
 			</g>
-			<!-- Mid hill (deeper sage, overlaps closer ground) -->
+
+			<!-- Mid hills: deeper sage, wavier profile, overlapping far hills -->
 			<g>
-				<rect x="80" y="146" width="100" height="40" fill="url(#hillMid)" />
-				<rect x="120" y="142" width="40" height="4" fill="url(#hillMid)" />
-				<rect x="180" y="150" width="120" height="36" fill="url(#hillMid)" />
-				<rect x="220" y="146" width="40" height="4" fill="url(#hillMid)" />
-				<rect x="300" y="148" width="180" height="38" fill="url(#hillMid)" />
-				<rect x="360" y="144" width="60" height="4" fill="url(#hillMid)" />
+				<rect x="0" y="140" width="480" height="30" fill="url(#hillMid)" />
+				<!-- wavy top ridge -->
+				<rect x="20" y="138" width="24" height="2" fill="url(#hillMid)" />
+				<rect x="30" y="136" width="12" height="2" fill="url(#hillMid)" />
+				<rect x="66" y="138" width="26" height="2" fill="url(#hillMid)" />
+				<rect x="78" y="136" width="10" height="2" fill="url(#hillMid)" />
+				<rect x="104" y="138" width="22" height="2" fill="url(#hillMid)" />
+				<rect x="140" y="138" width="30" height="2" fill="url(#hillMid)" />
+				<rect x="152" y="136" width="14" height="2" fill="url(#hillMid)" />
+				<rect x="158" y="134" width="4" height="2" fill="url(#hillMid)" />
+				<rect x="184" y="138" width="20" height="2" fill="url(#hillMid)" />
+				<rect x="216" y="138" width="28" height="2" fill="url(#hillMid)" />
+				<rect x="226" y="136" width="10" height="2" fill="url(#hillMid)" />
+				<rect x="260" y="138" width="24" height="2" fill="url(#hillMid)" />
+				<rect x="298" y="138" width="32" height="2" fill="url(#hillMid)" />
+				<rect x="310" y="136" width="12" height="2" fill="url(#hillMid)" />
+				<rect x="342" y="138" width="22" height="2" fill="url(#hillMid)" />
+				<rect x="376" y="138" width="30" height="2" fill="url(#hillMid)" />
+				<rect x="388" y="136" width="14" height="2" fill="url(#hillMid)" />
+				<rect x="418" y="138" width="24" height="2" fill="url(#hillMid)" />
+				<rect x="454" y="138" width="26" height="2" fill="url(#hillMid)" />
+				<rect x="462" y="136" width="12" height="2" fill="url(#hillMid)" />
+			</g>
+
+			<!-- Tree silhouettes on mid hills (slightly larger, 3-4 px) -->
+			<g fill="#4a6a40">
+				<rect x="50" y="134" width="3" height="4" />
+				<rect x="48" y="136" width="7" height="2" />
+				<rect x="160" y="130" width="3" height="6" />
+				<rect x="158" y="132" width="7" height="4" />
+				<rect x="240" y="134" width="3" height="4" />
+				<rect x="238" y="136" width="7" height="2" />
+				<rect x="322" y="132" width="3" height="6" />
+				<rect x="320" y="134" width="7" height="4" />
+				<rect x="410" y="134" width="3" height="4" />
+				<rect x="408" y="136" width="7" height="2" />
+			</g>
+
+			<!-- Near hill shoulder: deepest sage strip rolling into the grass -->
+			<g>
+				<rect x="0" y="156" width="480" height="8" fill="url(#hillNear)" />
+				<rect x="10" y="154" width="30" height="2" fill="url(#hillNear)" />
+				<rect x="60" y="154" width="44" height="2" fill="url(#hillNear)" />
+				<rect x="130" y="154" width="40" height="2" fill="url(#hillNear)" />
+				<rect x="200" y="154" width="54" height="2" fill="url(#hillNear)" />
+				<rect x="280" y="154" width="46" height="2" fill="url(#hillNear)" />
+				<rect x="360" y="154" width="42" height="2" fill="url(#hillNear)" />
+				<rect x="430" y="154" width="40" height="2" fill="url(#hillNear)" />
 			</g>
 
 			<!-- ========== GRASS FIELD ========== -->
