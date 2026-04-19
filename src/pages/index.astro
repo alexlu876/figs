@@ -76,11 +76,24 @@ import RetroWindow from '../components/RetroWindow.astro';
 					<rect x="1" y="1" width="1" height="1" fill="#7d9e5c" />
 				</pattern>
 
-				<!-- Distant mountain silhouette (desaturated cool purple, aerial perspective) -->
+				<!-- Mountain dithers: three distances for atmospheric perspective.
+				     mountHaze = farthest, palest (barely above sky color).
+				     mountFar  = main shadow side (used for left/shadow face).
+				     mountLit  = main lit side (used for right face, 1 shade lighter). -->
+				<pattern id="mountHaze" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#a8afc1" />
+					<rect x="0" y="0" width="1" height="1" fill="#b9c0cf" />
+					<rect x="1" y="1" width="1" height="1" fill="#b9c0cf" />
+				</pattern>
 				<pattern id="mountFar" width="2" height="2" patternUnits="userSpaceOnUse">
 					<rect width="2" height="2" fill="#7b839a" />
 					<rect x="0" y="0" width="1" height="1" fill="#8c94a8" />
 					<rect x="1" y="1" width="1" height="1" fill="#8c94a8" />
+				</pattern>
+				<pattern id="mountLit" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#939bae" />
+					<rect x="0" y="0" width="1" height="1" fill="#a5acbd" />
+					<rect x="1" y="1" width="1" height="1" fill="#a5acbd" />
 				</pattern>
 
 				<!-- Three hill-distance shades: far (lightest) → mid → near (deepest) -->
@@ -153,97 +166,202 @@ import RetroWindow from '../components/RetroWindow.astro';
 			     otherwise smooth gradient (avoids the sky looking glassy). -->
 			<rect width="480" height="136" fill="url(#skyDitherFine)" />
 
-			<!-- ========== DISTANT MOUNTAINS ========== -->
+			<!-- ========== DISTANT MOUNTAINS (aerial perspective + side-shading) ==========
+			     Three depth tiers: farthest haze (pale), main mountains (shadow
+			     + lit halves make them read as 3D forms), all extending below
+			     the hill ridge so the foreground hill overlaps their bases. -->
+
+			<!-- Haze mountains (farthest, barely visible — blend into sky) -->
+			<g opacity="0.85">
+				<rect x="158" y="116" width="4"  height="2" fill="url(#mountHaze)" />
+				<rect x="154" y="118" width="12" height="2" fill="url(#mountHaze)" />
+				<rect x="150" y="120" width="20" height="2" fill="url(#mountHaze)" />
+				<rect x="146" y="122" width="28" height="2" fill="url(#mountHaze)" />
+				<rect x="142" y="124" width="36" height="4" fill="url(#mountHaze)" />
+
+				<rect x="278" y="114" width="4"  height="2" fill="url(#mountHaze)" />
+				<rect x="274" y="116" width="12" height="2" fill="url(#mountHaze)" />
+				<rect x="270" y="118" width="20" height="2" fill="url(#mountHaze)" />
+				<rect x="266" y="120" width="28" height="2" fill="url(#mountHaze)" />
+				<rect x="262" y="122" width="36" height="2" fill="url(#mountHaze)" />
+				<rect x="258" y="124" width="44" height="4" fill="url(#mountHaze)" />
+
+				<rect x="378" y="116" width="4"  height="2" fill="url(#mountHaze)" />
+				<rect x="374" y="118" width="12" height="2" fill="url(#mountHaze)" />
+				<rect x="370" y="120" width="20" height="2" fill="url(#mountHaze)" />
+				<rect x="366" y="122" width="28" height="2" fill="url(#mountHaze)" />
+				<rect x="362" y="124" width="36" height="4" fill="url(#mountHaze)" />
+			</g>
+
+			<!-- Mountain 1: left, medium height (peak x=112, y=110) -->
+			<!-- shadow side (left) -->
 			<g>
-				<!-- mountain 1: left -->
-				<rect x="100" y="112" width="4" height="2" fill="url(#mountFar)" />
-				<rect x="96" y="114" width="14" height="2" fill="url(#mountFar)" />
-				<rect x="92" y="116" width="22" height="2" fill="url(#mountFar)" />
-				<rect x="88" y="118" width="30" height="2" fill="url(#mountFar)" />
-				<rect x="84" y="120" width="38" height="2" fill="url(#mountFar)" />
-				<!-- mountain 2: right of center, tallest -->
-				<rect x="220" y="106" width="4" height="2" fill="url(#mountFar)" />
-				<rect x="216" y="108" width="12" height="2" fill="url(#mountFar)" />
-				<rect x="212" y="110" width="20" height="2" fill="url(#mountFar)" />
-				<rect x="208" y="112" width="28" height="2" fill="url(#mountFar)" />
-				<rect x="204" y="114" width="36" height="2" fill="url(#mountFar)" />
-				<rect x="200" y="116" width="44" height="2" fill="url(#mountFar)" />
-				<rect x="196" y="118" width="52" height="2" fill="url(#mountFar)" />
-				<rect x="192" y="120" width="60" height="2" fill="url(#mountFar)" />
-				<!-- mountain 3: right -->
-				<rect x="330" y="112" width="4" height="2" fill="url(#mountFar)" />
-				<rect x="326" y="114" width="14" height="2" fill="url(#mountFar)" />
-				<rect x="322" y="116" width="22" height="2" fill="url(#mountFar)" />
-				<rect x="318" y="118" width="30" height="2" fill="url(#mountFar)" />
-				<rect x="314" y="120" width="38" height="2" fill="url(#mountFar)" />
-				<!-- mountain 4: far right -->
-				<rect x="420" y="114" width="4" height="2" fill="url(#mountFar)" />
-				<rect x="416" y="116" width="14" height="2" fill="url(#mountFar)" />
-				<rect x="412" y="118" width="22" height="2" fill="url(#mountFar)" />
-				<rect x="408" y="120" width="30" height="2" fill="url(#mountFar)" />
+				<rect x="111" y="110" width="1"  height="2" fill="url(#mountFar)" />
+				<rect x="108" y="112" width="4"  height="2" fill="url(#mountFar)" />
+				<rect x="104" y="114" width="8"  height="2" fill="url(#mountFar)" />
+				<rect x="100" y="116" width="12" height="2" fill="url(#mountFar)" />
+				<rect x="96"  y="118" width="16" height="2" fill="url(#mountFar)" />
+				<rect x="92"  y="120" width="20" height="2" fill="url(#mountFar)" />
+				<rect x="88"  y="122" width="24" height="2" fill="url(#mountFar)" />
+				<rect x="84"  y="124" width="28" height="4" fill="url(#mountFar)" />
+			</g>
+			<!-- lit side (right) -->
+			<g>
+				<rect x="112" y="110" width="1"  height="2" fill="url(#mountLit)" />
+				<rect x="112" y="112" width="4"  height="2" fill="url(#mountLit)" />
+				<rect x="112" y="114" width="8"  height="2" fill="url(#mountLit)" />
+				<rect x="112" y="116" width="12" height="2" fill="url(#mountLit)" />
+				<rect x="112" y="118" width="16" height="2" fill="url(#mountLit)" />
+				<rect x="112" y="120" width="20" height="2" fill="url(#mountLit)" />
+				<rect x="112" y="122" width="24" height="2" fill="url(#mountLit)" />
+				<rect x="112" y="124" width="28" height="4" fill="url(#mountLit)" />
 			</g>
 
-			<!-- ========== CLOUDS (bigger, multi-lobe, BW2-style) ========== -->
-			<!-- Big cumulus, upper-center. 3 stacked lobes across ~80px -->
+			<!-- Mountain 2: tall central peak (peak x=224, y=104) with snow cap -->
+			<!-- shadow side (left) -->
+			<g>
+				<rect x="223" y="104" width="1"  height="2" fill="url(#mountFar)" />
+				<rect x="220" y="106" width="4"  height="2" fill="url(#mountFar)" />
+				<rect x="217" y="108" width="7"  height="2" fill="url(#mountFar)" />
+				<rect x="214" y="110" width="10" height="2" fill="url(#mountFar)" />
+				<rect x="211" y="112" width="13" height="2" fill="url(#mountFar)" />
+				<rect x="208" y="114" width="16" height="2" fill="url(#mountFar)" />
+				<rect x="205" y="116" width="19" height="2" fill="url(#mountFar)" />
+				<rect x="202" y="118" width="22" height="2" fill="url(#mountFar)" />
+				<rect x="199" y="120" width="25" height="2" fill="url(#mountFar)" />
+				<rect x="196" y="122" width="28" height="2" fill="url(#mountFar)" />
+				<rect x="193" y="124" width="31" height="4" fill="url(#mountFar)" />
+			</g>
+			<!-- lit side (right) -->
+			<g>
+				<rect x="224" y="104" width="1"  height="2" fill="url(#mountLit)" />
+				<rect x="224" y="106" width="4"  height="2" fill="url(#mountLit)" />
+				<rect x="224" y="108" width="7"  height="2" fill="url(#mountLit)" />
+				<rect x="224" y="110" width="10" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="112" width="13" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="114" width="16" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="116" width="19" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="118" width="22" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="120" width="25" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="122" width="28" height="2" fill="url(#mountLit)" />
+				<rect x="224" y="124" width="31" height="4" fill="url(#mountLit)" />
+			</g>
+			<!-- snow cap at the peak -->
+			<rect x="222" y="103" width="4" height="2" fill="#e6e9ec" />
+			<rect x="220" y="105" width="2" height="1" fill="#e6e9ec" />
+			<rect x="226" y="105" width="2" height="1" fill="#e6e9ec" />
+
+			<!-- Mountain 3: right of center (peak x=340, y=112) -->
+			<g>
+				<rect x="339" y="112" width="1"  height="2" fill="url(#mountFar)" />
+				<rect x="336" y="114" width="4"  height="2" fill="url(#mountFar)" />
+				<rect x="332" y="116" width="8"  height="2" fill="url(#mountFar)" />
+				<rect x="328" y="118" width="12" height="2" fill="url(#mountFar)" />
+				<rect x="324" y="120" width="16" height="2" fill="url(#mountFar)" />
+				<rect x="320" y="122" width="20" height="2" fill="url(#mountFar)" />
+				<rect x="316" y="124" width="24" height="4" fill="url(#mountFar)" />
+			</g>
+			<g>
+				<rect x="340" y="112" width="1"  height="2" fill="url(#mountLit)" />
+				<rect x="340" y="114" width="4"  height="2" fill="url(#mountLit)" />
+				<rect x="340" y="116" width="8"  height="2" fill="url(#mountLit)" />
+				<rect x="340" y="118" width="12" height="2" fill="url(#mountLit)" />
+				<rect x="340" y="120" width="16" height="2" fill="url(#mountLit)" />
+				<rect x="340" y="122" width="20" height="2" fill="url(#mountLit)" />
+				<rect x="340" y="124" width="24" height="4" fill="url(#mountLit)" />
+			</g>
+
+			<!-- Mountain 4: far right (peak x=430, y=116) -->
+			<g>
+				<rect x="429" y="116" width="1"  height="2" fill="url(#mountFar)" />
+				<rect x="426" y="118" width="4"  height="2" fill="url(#mountFar)" />
+				<rect x="422" y="120" width="8"  height="2" fill="url(#mountFar)" />
+				<rect x="418" y="122" width="12" height="2" fill="url(#mountFar)" />
+				<rect x="414" y="124" width="16" height="4" fill="url(#mountFar)" />
+			</g>
+			<g>
+				<rect x="430" y="116" width="1"  height="2" fill="url(#mountLit)" />
+				<rect x="430" y="118" width="4"  height="2" fill="url(#mountLit)" />
+				<rect x="430" y="120" width="8"  height="2" fill="url(#mountLit)" />
+				<rect x="430" y="122" width="12" height="2" fill="url(#mountLit)" />
+				<rect x="430" y="124" width="16" height="4" fill="url(#mountLit)" />
+			</g>
+
+			<!-- ========== CLOUDS (fluffy multi-lobe, Pokemon-style shading) ==========
+			     Each cloud has a distinct multi-lobe profile with 4 shade tiers:
+			     top white, body, underside shadow, deep shadow. Less squared,
+			     more cumulus. -->
+
+			<!-- Cloud A: big three-lobe cumulus, upper-center -->
 			<g class="drift drift-a">
-				<!-- top highlights (two small caps) -->
-				<rect x="258" y="12" width="10" height="1" fill="#ffffff" />
-				<rect x="278" y="8" width="14" height="1" fill="#ffffff" />
-				<rect x="298" y="14" width="12" height="1" fill="#ffffff" />
-				<!-- upper body lobes -->
-				<rect x="256" y="13" width="14" height="2" fill="#ffffff" />
-				<rect x="274" y="9" width="22" height="3" fill="#ffffff" />
-				<rect x="296" y="15" width="18" height="2" fill="#ffffff" />
-				<rect x="252" y="15" width="20" height="3" fill="#ffffff" />
-				<rect x="270" y="12" width="30" height="3" fill="#ffffff" />
-				<rect x="294" y="17" width="22" height="3" fill="#ffffff" />
-				<!-- main body (widest) -->
-				<rect x="248" y="18" width="70" height="4" fill="#ffffff" />
-				<rect x="244" y="22" width="78" height="4" fill="#ffffff" />
-				<rect x="250" y="26" width="64" height="2" fill="#ffffff" />
-				<!-- shadow layers -->
-				<rect x="250" y="28" width="62" height="1" fill="#d3dde5" />
-				<rect x="254" y="29" width="54" height="1" fill="#b8c9d4" />
-				<rect x="262" y="30" width="38" height="1" fill="#9faebd" />
+				<!-- Lobe tops (catches light) -->
+				<rect x="282" y="8"  width="8"  height="1" fill="#ffffff" />
+				<rect x="256" y="12" width="6"  height="1" fill="#ffffff" />
+				<rect x="304" y="14" width="6"  height="1" fill="#ffffff" />
+				<!-- Upper lobe bodies -->
+				<rect x="280" y="9"  width="12" height="2" fill="#ffffff" />
+				<rect x="254" y="13" width="10" height="2" fill="#ffffff" />
+				<rect x="302" y="15" width="10" height="2" fill="#ffffff" />
+				<rect x="278" y="11" width="16" height="2" fill="#ffffff" />
+				<rect x="252" y="15" width="14" height="2" fill="#ffffff" />
+				<rect x="300" y="17" width="14" height="2" fill="#ffffff" />
+				<!-- Merged upper body -->
+				<rect x="252" y="17" width="64" height="2" fill="#ffffff" />
+				<rect x="250" y="19" width="68" height="2" fill="#ffffff" />
+				<!-- Widest body rows -->
+				<rect x="248" y="21" width="72" height="3" fill="#ffffff" />
+				<rect x="250" y="24" width="70" height="2" fill="#f2f7fa" />
+				<!-- Underside shadow tiers -->
+				<rect x="254" y="26" width="64" height="1" fill="#d2dde5" />
+				<rect x="258" y="27" width="56" height="1" fill="#b2c3d0" />
+				<rect x="264" y="28" width="46" height="1" fill="#93a5b6" />
+				<!-- Side fluff bumps (breaks rectangular look) -->
+				<rect x="246" y="22" width="2"  height="2" fill="#ffffff" />
+				<rect x="320" y="22" width="2"  height="2" fill="#ffffff" />
+				<rect x="244" y="23" width="2"  height="1" fill="#ffffff" />
 			</g>
 
-			<!-- Medium-large cloud, upper right -->
+			<!-- Cloud B: medium two-lobe, right side -->
 			<g class="drift drift-b">
-				<rect x="388" y="36" width="14" height="1" fill="#ffffff" />
-				<rect x="406" y="34" width="10" height="1" fill="#ffffff" />
-				<rect x="384" y="37" width="20" height="2" fill="#ffffff" />
-				<rect x="402" y="35" width="18" height="3" fill="#ffffff" />
-				<rect x="380" y="39" width="50" height="4" fill="#ffffff" />
-				<rect x="376" y="43" width="58" height="3" fill="#ffffff" />
-				<rect x="380" y="46" width="50" height="2" fill="#ffffff" />
-				<!-- shadow -->
-				<rect x="380" y="48" width="48" height="1" fill="#c3d2dc" />
-				<rect x="386" y="49" width="36" height="1" fill="#a9bcc8" />
+				<rect x="386" y="34" width="6"  height="1" fill="#ffffff" />
+				<rect x="404" y="36" width="8"  height="1" fill="#ffffff" />
+				<rect x="384" y="35" width="10" height="2" fill="#ffffff" />
+				<rect x="402" y="37" width="12" height="2" fill="#ffffff" />
+				<rect x="382" y="37" width="14" height="2" fill="#ffffff" />
+				<rect x="400" y="39" width="16" height="2" fill="#ffffff" />
+				<rect x="382" y="39" width="34" height="3" fill="#ffffff" />
+				<rect x="380" y="42" width="38" height="3" fill="#ffffff" />
+				<rect x="384" y="45" width="30" height="1" fill="#f2f7fa" />
+				<!-- shadow tiers -->
+				<rect x="386" y="46" width="26" height="1" fill="#c8d5df" />
+				<rect x="390" y="47" width="18" height="1" fill="#a2b3c2" />
 			</g>
 
-			<!-- Smaller fluffy cloud, far-right lower -->
+			<!-- Cloud C: small puff, far-right lower -->
 			<g class="drift drift-c">
-				<rect x="438" y="66" width="12" height="1" fill="#ffffff" />
-				<rect x="434" y="67" width="20" height="2" fill="#ffffff" />
-				<rect x="430" y="69" width="30" height="3" fill="#ffffff" />
-				<rect x="436" y="72" width="20" height="1" fill="#ffffff" />
-				<rect x="436" y="73" width="20" height="1" fill="#c3d2dc" />
+				<rect x="440" y="68" width="6"  height="1" fill="#ffffff" />
+				<rect x="436" y="69" width="14" height="2" fill="#ffffff" />
+				<rect x="432" y="71" width="22" height="2" fill="#ffffff" />
+				<rect x="436" y="73" width="14" height="1" fill="#f2f7fa" />
+				<rect x="438" y="74" width="10" height="1" fill="#c8d5df" />
 			</g>
 
-			<!-- Wispy horizon streak -->
+			<!-- Cloud D: small fluff, left-of-center (replaces previous wispy streak) -->
 			<g class="drift drift-a">
-				<rect x="132" y="84" width="36" height="1" fill="#e6eef2" />
-				<rect x="128" y="85" width="44" height="1" fill="#f4f7f8" />
-				<rect x="132" y="86" width="36" height="1" fill="#cedae2" />
+				<rect x="148" y="86" width="4"  height="1" fill="#ffffff" />
+				<rect x="144" y="87" width="12" height="2" fill="#ffffff" />
+				<rect x="140" y="89" width="20" height="2" fill="#ffffff" />
+				<rect x="144" y="91" width="12" height="1" fill="#f2f7fa" />
+				<rect x="146" y="92" width="8"  height="1" fill="#c8d5df" />
 			</g>
 
-			<!-- Small background cloud, upper-left -->
+			<!-- Cloud E: tiny tuft, upper-left -->
 			<g class="drift drift-b">
-				<rect x="52" y="30" width="10" height="1" fill="#ffffff" />
-				<rect x="48" y="31" width="18" height="2" fill="#ffffff" />
-				<rect x="44" y="33" width="26" height="3" fill="#ffffff" />
-				<rect x="48" y="36" width="18" height="1" fill="#ffffff" />
-				<rect x="52" y="37" width="10" height="1" fill="#c3d2dc" />
+				<rect x="52" y="28" width="4"  height="1" fill="#ffffff" />
+				<rect x="48" y="29" width="12" height="2" fill="#ffffff" />
+				<rect x="44" y="31" width="20" height="3" fill="#ffffff" />
+				<rect x="48" y="34" width="12" height="1" fill="#f2f7fa" />
+				<rect x="50" y="35" width="8"  height="1" fill="#c8d5df" />
 			</g>
 
 			<!-- ========== FOREGROUND HILL (one rolling form — Bliss-style) ==========
