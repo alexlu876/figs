@@ -2,701 +2,369 @@
 import Base from '../layouts/Base.astro';
 import RetroWindow from '../components/RetroWindow.astro';
 
-// Canopy: a few foliage blobs render the mass; a hand-placed list of
-// individually visible fig leaves sits on top, sized larger at the rim so
-// palmate lobes protrude against the sky. Coordinates are in the local
-// coord system of the .tree-shift group (itself translate(-60 40)).
-type Leaf = { x: number; y: number; r: number; s: number; shade: 0 | 1 | 2 };
-const SHADE_SYMBOL = ['#figLeafDark', '#figLeafMid', '#figLeafLight'] as const;
-
-const leaves: Leaf[] = [
-	// Upper rim
-	{ x: 130, y: 60, r: -40, s: 1.6, shade: 2 },
-	{ x: 230, y: 30, r: -10, s: 1.7, shade: 2 },
-	{ x: 340, y: 35, r: 18, s: 1.6, shade: 2 },
-	{ x: 450, y: 70, r: 50, s: 1.5, shade: 2 },
-	// Right rim
-	{ x: 575, y: 200, r: 105, s: 1.3, shade: 2 },
-	{ x: 555, y: 340, r: 150, s: 1.3, shade: 1 },
-	// Bottom arc
-	{ x: 430, y: 415, r: -175, s: 1.25, shade: 2 },
-	{ x: 240, y: 425, r: 180, s: 1.2, shade: 2 },
-	// Left rim
-	{ x: 70, y: 335, r: -135, s: 1.3, shade: 2 },
-	{ x: 25, y: 220, r: -95, s: 1.3, shade: 2 },
-	// Interior accent leaves
-	{ x: 300, y: 120, r: 0, s: 1.05, shade: 2 },
-	{ x: 190, y: 200, r: -45, s: 1.0, shade: 2 },
-	{ x: 420, y: 220, r: 45, s: 1.0, shade: 2 },
-	{ x: 330, y: 330, r: 175, s: 1.0, shade: 2 }
-];
+// Pixel-art scene, Pokémon Emerald / Black-&-White inspired.
+// ViewBox is a small 480x270 and everything is drawn on integer pixel
+// coordinates; shape-rendering="crispEdges" + CSS image-rendering:pixelated
+// preserves the chunky look at any viewport size.
 ---
 
 <Base>
 	<div class="scene" id="scene" role="main" aria-label="figtre.es home scene">
 		<svg
 			class="landscape"
-			viewBox="0 0 1440 900"
+			viewBox="0 0 480 270"
 			preserveAspectRatio="xMinYMid slice"
+			shape-rendering="crispEdges"
 			role="img"
 			aria-labelledby="sceneDesc"
-			data-desktop-viewbox="0 0 1440 900"
-			data-mobile-viewbox="-20 -30 720 930"
+			data-desktop-viewbox="0 0 480 270"
+			data-mobile-viewbox="0 0 200 270"
 		>
 			<desc id="sceneDesc">
-				A large fig tree occupies the left side of a muted landscape. A person sits beneath it, looking out over sage hills under a soft blue sky. Figs and fig leaves on the tree are interactive.
+				A pixel-art fig tree on the left of a muted landscape, with a person sitting beneath it, looking out over dithered sage hills under a dithered blue sky. Figs and fig leaves on the tree are interactive.
 			</desc>
 
 			<defs>
-				<!-- Sky gradient: muted blue fading to pale horizon -->
-				<linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#8ca8bf" />
-					<stop offset="0.45" stop-color="#afc4d2" />
-					<stop offset="0.85" stop-color="#d6dcd6" />
-					<stop offset="1" stop-color="#dfe2d5" />
-				</linearGradient>
+				<!-- Dithered sky: classic GBA/DS 2x2 checkerboard blending two
+				     blues for a low-bit look. Two bands — upper and horizon —
+				     give a sense of atmospheric depth. -->
+				<pattern id="skyHi" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#7ea6c2" />
+					<rect x="0" y="0" width="1" height="1" fill="#95bcd2" />
+					<rect x="1" y="1" width="1" height="1" fill="#95bcd2" />
+				</pattern>
+				<pattern id="skyLo" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#b5ccd8" />
+					<rect x="0" y="0" width="1" height="1" fill="#cedae2" />
+					<rect x="1" y="1" width="1" height="1" fill="#cedae2" />
+				</pattern>
 
-				<!-- Field gradient: sage, less saturated so hills dominate the middle -->
-				<linearGradient id="field" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#8fa578" />
-					<stop offset="0.5" stop-color="#7a9167" />
-					<stop offset="1" stop-color="#617955" />
-				</linearGradient>
+				<!-- Dithered grass field -->
+				<pattern id="grass" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#6a8a4c" />
+					<rect x="0" y="0" width="1" height="1" fill="#7d9e5c" />
+					<rect x="1" y="1" width="1" height="1" fill="#7d9e5c" />
+				</pattern>
 
-				<!-- Trunk gradient for depth -->
-				<linearGradient id="trunk" x1="0" x2="1" y1="0" y2="0">
-					<stop offset="0" stop-color="#2f2218" />
-					<stop offset="0.4" stop-color="#5a4130" />
-					<stop offset="0.7" stop-color="#432f22" />
-					<stop offset="1" stop-color="#2a1d14" />
-				</linearGradient>
+				<!-- Dithered far + mid hill shades -->
+				<pattern id="hillFar" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#8ba17a" />
+					<rect x="0" y="0" width="1" height="1" fill="#a0b68d" />
+					<rect x="1" y="1" width="1" height="1" fill="#a0b68d" />
+				</pattern>
+				<pattern id="hillMid" width="2" height="2" patternUnits="userSpaceOnUse">
+					<rect width="2" height="2" fill="#789066" />
+					<rect x="0" y="0" width="1" height="1" fill="#8aa478" />
+					<rect x="1" y="1" width="1" height="1" fill="#8aa478" />
+				</pattern>
 
-				<!-- Three foliage gradients for layered depth -->
-				<radialGradient id="foliageDark" cx="0.4" cy="0.35" r="0.9">
-					<stop offset="0" stop-color="#3d5430" />
-					<stop offset="0.6" stop-color="#2a3b20" />
-					<stop offset="1" stop-color="#1b2814" />
-				</radialGradient>
-				<radialGradient id="foliageMid" cx="0.4" cy="0.35" r="0.9">
-					<stop offset="0" stop-color="#577043" />
-					<stop offset="0.6" stop-color="#3f5531" />
-					<stop offset="1" stop-color="#2a3b20" />
-				</radialGradient>
-				<radialGradient id="foliageLight" cx="0.4" cy="0.3" r="0.9">
-					<stop offset="0" stop-color="#7a9358" />
-					<stop offset="0.55" stop-color="#577043" />
-					<stop offset="1" stop-color="#3f5531" />
-				</radialGradient>
-
-				<!-- Hill gradients: three shades for distance -->
-				<linearGradient id="hillFar" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#9fb293" />
-					<stop offset="1" stop-color="#8aa181" />
-				</linearGradient>
-				<linearGradient id="hillMid" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#8ca37b" />
-					<stop offset="1" stop-color="#748c66" />
-				</linearGradient>
-				<linearGradient id="hillNear" x1="0" x2="0" y1="0" y2="1">
-					<stop offset="0" stop-color="#768c62" />
-					<stop offset="1" stop-color="#5e7550" />
-				</linearGradient>
-
-				<!-- Realistic fig gradient: green-yellow shoulders → mulberry → deep purple -->
-				<linearGradient id="figBody" x1="0.5" x2="0.5" y1="0" y2="1">
-					<stop offset="0" stop-color="#a5ae68" />
-					<stop offset="0.18" stop-color="#8d7a62" />
-					<stop offset="0.4" stop-color="#6b3e54" />
-					<stop offset="0.75" stop-color="#4a2234" />
-					<stop offset="1" stop-color="#2a1020" />
-				</linearGradient>
-
-				<!-- Chunky XP-Bliss style cloud: soft white painted blob -->
-				<radialGradient id="cloudBody" cx="0.5" cy="0.55" r="0.55">
-					<stop offset="0" stop-color="#ffffff" stop-opacity="0.95" />
-					<stop offset="0.6" stop-color="#f4f3eb" stop-opacity="0.7" />
-					<stop offset="1" stop-color="#eaece0" stop-opacity="0" />
-				</radialGradient>
-				<radialGradient id="cloudShadow" cx="0.5" cy="0.7" r="0.55">
-					<stop offset="0" stop-color="#9fb2c1" stop-opacity="0.45" />
-					<stop offset="1" stop-color="#9fb2c1" stop-opacity="0" />
-				</radialGradient>
-
-				<!-- Reusable fluffy cloud shape (chunky multi-lobe) -->
-				<symbol id="cloud1" viewBox="-120 -50 240 100" overflow="visible">
-					<g filter="url(#cloudSoften)">
-						<!-- underside shadow -->
-						<ellipse cx="0" cy="18" rx="110" ry="14" fill="url(#cloudShadow)" />
-						<!-- main lobes -->
-						<ellipse cx="-70" cy="8" rx="45" ry="24" fill="url(#cloudBody)" />
-						<ellipse cx="-30" cy="-8" rx="55" ry="30" fill="url(#cloudBody)" />
-						<ellipse cx="20" cy="-14" rx="60" ry="34" fill="url(#cloudBody)" />
-						<ellipse cx="70" cy="0" rx="48" ry="26" fill="url(#cloudBody)" />
-						<ellipse cx="100" cy="10" rx="30" ry="18" fill="url(#cloudBody)" />
-						<!-- highlights -->
-						<ellipse cx="-28" cy="-20" rx="25" ry="9" fill="#ffffff" opacity="0.55" />
-						<ellipse cx="25" cy="-24" rx="22" ry="8" fill="#ffffff" opacity="0.5" />
-					</g>
+				<!-- Ripe fig pixel sprite (8x10). Integer coords only. -->
+				<symbol id="ripeFig" viewBox="0 0 8 10" overflow="visible">
+					<!-- stem -->
+					<rect x="3" y="0" width="2" height="1" fill="#3d5220" />
+					<rect x="2" y="1" width="4" height="1" fill="#5d7d35" />
+					<!-- shoulders: green-yellow blotch blending into mulberry -->
+					<rect x="1" y="2" width="2" height="1" fill="#8aa04c" />
+					<rect x="3" y="2" width="4" height="1" fill="#6d3f52" />
+					<!-- body rows getting darker -->
+					<rect x="0" y="3" width="8" height="1" fill="#6d3f52" />
+					<rect x="0" y="4" width="8" height="1" fill="#5a3546" />
+					<rect x="0" y="5" width="8" height="1" fill="#4a2735" />
+					<rect x="0" y="6" width="8" height="1" fill="#3b1c28" />
+					<!-- round bottom -->
+					<rect x="1" y="7" width="6" height="1" fill="#3b1c28" />
+					<rect x="2" y="8" width="4" height="1" fill="#2a1020" />
+					<rect x="3" y="9" width="2" height="1" fill="#1a0814" />
+					<!-- highlight pixels (upper-left, catches the light) -->
+					<rect x="1" y="3" width="1" height="1" fill="#8a6a7c" />
+					<rect x="1" y="4" width="1" height="1" fill="#775a6c" />
 				</symbol>
 
-				<!-- Film grain over whole scene -->
-				<filter id="grain" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0.18 0" />
-				</filter>
-
-				<!-- Sky cloud wash: higher frequency, stronger opacity for visible texture -->
-				<filter id="cloudWash" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="3" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.97  0 0 0 0 0.96  0 0 0 0 0.93  0 0 0 0.32 -0.04" />
-				</filter>
-
-				<!-- Fine sky grain for painterly texture -->
-				<filter id="skyGrain" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="2" seed="9" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.85  0 0 0 0 0.88  0 0 0 0 0.9  0 0 0 0.12 0" />
-				</filter>
-
-				<!-- Cloud soften filter -->
-				<filter id="cloudSoften" x="-20%" y="-30%" width="140%" height="160%">
-					<feGaussianBlur stdDeviation="2.2" />
-				</filter>
-
-				<!-- Field speckle -->
-				<filter id="fieldGrain" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="11" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.32  0 0 0 0 0.18  0 0 0 0.24 0" />
-				</filter>
-
-				<!-- Hill grain: horizontal streaks -->
-				<filter id="hillGrain" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.6 0.04" numOctaves="2" seed="15" stitchTiles="stitch" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.24  0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0.25 0" />
-				</filter>
-
-				<!-- Bark texture, clipped to trunk -->
-				<filter id="barkTex" x="0" y="0" width="100%" height="100%">
-					<feTurbulence type="fractalNoise" baseFrequency="0.6 3" numOctaves="2" seed="5" />
-					<feColorMatrix type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.07  0 0 0 0 0.04  0 0 0 0.35 0" />
-					<feComposite in2="SourceGraphic" operator="in" />
-				</filter>
-
-				<!-- Fig soft shadow -->
-				<filter id="figShadow" x="-20%" y="-20%" width="140%" height="140%">
-					<feGaussianBlur stdDeviation="0.8" />
-				</filter>
-
-				<!-- Soft backlight for the outermost canopy leaves so their
-				     palmate lobes pop against the sky like a sun-lit rim. -->
-				<filter id="leafGlow" x="-30%" y="-30%" width="160%" height="160%">
-					<feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="blur" />
-					<feFlood flood-color="#f6efc9" flood-opacity="0.55" />
-					<feComposite in2="blur" operator="in" />
-					<feMerge>
-						<feMergeNode />
-						<feMergeNode in="SourceGraphic" />
-					</feMerge>
-				</filter>
-
-				<!-- Dark curved branch stroke (used behind canopy, over back leaves) -->
-				<linearGradient id="branchDark" x1="0" x2="1" y1="0" y2="0">
-					<stop offset="0" stop-color="#1d140c" />
-					<stop offset="0.6" stop-color="#2d2016" />
-					<stop offset="1" stop-color="#1a120a" />
-				</linearGradient>
-
-				<!-- Trunk clip path (used by bark texture so it only paints over the trunk shape) -->
-				<clipPath id="trunkClip">
-					<path d="M 180 700
-					         C 170 560, 150 420, 180 280
-					         C 200 200, 220 140, 260 90
-					         C 275 80, 305 80, 320 95
-					         C 345 140, 360 210, 345 300
-					         C 330 420, 335 560, 345 700
-					         C 345 710, 180 712, 180 700 Z" />
-				</clipPath>
-
-				<!-- Reusable palmate fig leaf path (referenced via <use>). The
-				     three visible-leaf symbols below bake in their own gradient
-				     fills so we get depth variation across the canopy. -->
-				<path id="figLeafPath"
-					d="M 0 5
-					   C -6 0, -14 -4, -22 -8
-					   C -42 -16, -54 -26, -50 -40
-					   C -42 -46, -34 -44, -28 -38
-					   C -36 -48, -42 -58, -36 -66
-					   C -28 -68, -22 -62, -18 -54
-					   C -18 -62, -14 -72, -6 -74
-					   C 0 -70, 2 -62, 0 -54
-					   C 6 -70, 14 -76, 22 -72
-					   C 26 -64, 22 -54, 16 -48
-					   C 26 -52, 36 -50, 42 -42
-					   C 42 -32, 34 -24, 24 -20
-					   C 36 -16, 44 -8, 42 2
-					   C 34 8, 22 4, 14 -2
-					   C 10 2, 4 4, 0 5 Z"
-				/>
-				<g id="figLeafVeins">
-					<path d="M 0 5 L -4 -62" />
-					<path d="M -2 -24 L -28 -36" />
-					<path d="M -2 -24 L -18 -58" />
-					<path d="M -1 -36 L 16 -48" />
-					<path d="M -1 -36 L 14 -2" />
-					<path d="M -3 -12 L 34 -24" />
-					<path d="M -3 -12 L 24 4" />
-				</g>
-
-				<symbol id="figLeafDark" viewBox="-60 -80 120 90" overflow="visible">
-					<use href="#figLeafPath" fill="url(#foliageDark)" stroke="#1b2814" stroke-width="0.7" stroke-linejoin="round" />
-					<use href="#figLeafVeins" stroke="#1b2814" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
-				</symbol>
-				<symbol id="figLeafMid" viewBox="-60 -80 120 90" overflow="visible">
-					<use href="#figLeafPath" fill="url(#foliageMid)" stroke="#23311a" stroke-width="0.7" stroke-linejoin="round" />
-					<use href="#figLeafVeins" stroke="#23311a" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
-				</symbol>
-				<symbol id="figLeafLight" viewBox="-60 -80 120 90" overflow="visible">
-					<use href="#figLeafPath" fill="url(#foliageLight)" stroke="#2a3b20" stroke-width="0.7" stroke-linejoin="round" />
-					<use href="#figLeafVeins" stroke="#2a3b20" stroke-width="0.7" fill="none" opacity="0.6" stroke-linecap="round" />
-				</symbol>
-				<!-- Alias kept for non-canopy uses (hotspots, decorative leaves) -->
-				<symbol id="figLeaf" viewBox="-60 -80 120 90" overflow="visible">
-					<use href="#figLeafPath" fill="url(#foliageMid)" stroke="#23311a" stroke-width="0.7" stroke-linejoin="round" />
-					<use href="#figLeafVeins" stroke="#23311a" stroke-width="0.7" fill="none" opacity="0.55" stroke-linecap="round" />
-				</symbol>
-
-				<!-- Reusable ripe fig: squat realistic shape with green stem,
-				     green-yellow shoulder, mulberry-to-purple body gradient. -->
-				<symbol id="ripeFig" viewBox="-30 -40 60 70" overflow="visible">
-					<!-- chunky green stem curving slightly -->
-					<path d="M 0 -26 Q -3 -32, -5 -37" stroke="#5d7235" stroke-width="4.5" fill="none" stroke-linecap="round" />
-					<!-- tiny leaf bract at the stem tip -->
-					<path d="M -5 -37 Q -2 -40, 1 -37 Q 0 -33, -4 -34 Z" fill="#7a9045" />
-					<!-- squat body: narrow shoulders, wider round bottom -->
-					<path
-						d="M -14 -22
-						   Q -8 -26, -2 -26
-						   Q 0 -28, 2 -26
-						   Q 8 -26, 14 -22
-						   Q 24 -10, 26 4
-						   Q 24 18, 12 26
-						   Q 0 30, -12 26
-						   Q -24 18, -26 4
-						   Q -24 -10, -14 -22 Z"
-						fill="url(#figBody)"
-					/>
-					<!-- green/yellow shoulder blotch (variegation near stem) -->
-					<path d="M -6 -18 Q -2 -22, 2 -22 Q 8 -22, 9 -17 Q 5 -13, -1 -13 Q -7 -14, -6 -18 Z" fill="#a5ae68" opacity="0.55" />
-					<!-- secondary yellow-green wash on the side -->
-					<ellipse cx="10" cy="-10" rx="5" ry="6" fill="#9fa65c" opacity="0.32" />
-					<!-- vertical ribs -->
-					<g stroke="#240d18" stroke-width="0.5" fill="none" opacity="0.35">
-						<path d="M -14 -14 Q -14 8, -10 24" />
-						<path d="M -7 -22 Q -8 8, -6 27" />
-						<path d="M 0 -24 L 0 28" />
-						<path d="M 7 -22 Q 8 8, 6 27" />
-						<path d="M 14 -14 Q 14 8, 10 24" />
-					</g>
-					<!-- soft highlight -->
-					<ellipse cx="-10" cy="-2" rx="5" ry="10" fill="#d6b4c2" opacity="0.2" />
-					<!-- ostiole (eye at bottom) -->
-					<circle cx="0" cy="28" r="1.6" fill="#1a0812" />
+				<!-- Fig leaf pixel sprite (12x12): 3-lobed palmate. -->
+				<symbol id="figLeaf" viewBox="0 0 12 12" overflow="visible">
+					<!-- center lobe (tallest) -->
+					<rect x="5" y="0" width="2" height="1" fill="#4a6a2e" />
+					<rect x="4" y="1" width="4" height="2" fill="#557a35" />
+					<!-- left lobe -->
+					<rect x="1" y="1" width="2" height="1" fill="#4a6a2e" />
+					<rect x="0" y="2" width="3" height="2" fill="#557a35" />
+					<!-- right lobe -->
+					<rect x="9" y="1" width="2" height="1" fill="#4a6a2e" />
+					<rect x="9" y="2" width="3" height="2" fill="#557a35" />
+					<!-- upper-body merge -->
+					<rect x="2" y="3" width="8" height="1" fill="#557a35" />
+					<rect x="1" y="4" width="10" height="2" fill="#557a35" />
+					<!-- lower body -->
+					<rect x="2" y="6" width="8" height="1" fill="#4a6a2e" />
+					<rect x="3" y="7" width="6" height="1" fill="#4a6a2e" />
+					<rect x="4" y="8" width="4" height="1" fill="#3d5520" />
+					<!-- stem -->
+					<rect x="5" y="9" width="2" height="3" fill="#3d5220" />
+					<!-- vein hints -->
+					<rect x="5" y="3" width="1" height="5" fill="#3d5520" />
 				</symbol>
 			</defs>
 
-			<!-- ============================================================
-			     SKY
-			     ============================================================ -->
-			<rect width="1440" height="560" fill="url(#sky)" />
+			<!-- ========== SKY ========== -->
+			<rect width="480" height="90" fill="url(#skyHi)" />
+			<rect y="90" width="480" height="40" fill="url(#skyLo)" />
 
-			<!-- Base cloud wash filter painted onto the sky for visible texture -->
-			<rect width="1440" height="500" filter="url(#cloudWash)" opacity="0.7" />
-			<!-- Fine painterly grain on the sky -->
-			<rect width="1440" height="500" filter="url(#skyGrain)" opacity="0.35" />
+			<!-- ========== CLOUDS (pixel-stacked) ========== -->
+			<g class="drift drift-a" fill="#ffffff">
+				<rect x="280" y="22" width="28" height="3" />
+				<rect x="274" y="25" width="40" height="4" />
+				<rect x="280" y="29" width="28" height="3" />
+			</g>
+			<rect x="282" y="32" width="24" height="1" fill="#b4c5cf" />
 
-			<!-- Chunky XP-Bliss clouds — 5 clouds scattered so the sky reads
-			     as a painterly scatter rather than a diagonal band. Each
-			     cloud-row also drifts very slowly to add subtle life. -->
-			<g class="clouds">
-				<use class="drift drift-a" href="#cloud1" x="700" y="110" width="380" height="140" opacity="0.95" />
-				<use class="drift drift-b" href="#cloud1" x="1260" y="60" width="300" height="120" opacity="0.9" />
-				<use class="drift drift-c" href="#cloud1" x="1080" y="230" width="260" height="95" opacity="0.8" />
-				<use class="drift drift-b" href="#cloud1" x="820" y="320" width="220" height="80" opacity="0.6" />
-				<use class="drift drift-a" href="#cloud1" x="1320" y="360" width="200" height="75" opacity="0.55" />
+			<g class="drift drift-b" fill="#ffffff">
+				<rect x="380" y="40" width="22" height="3" />
+				<rect x="376" y="43" width="32" height="4" />
+				<rect x="380" y="47" width="22" height="3" />
+			</g>
+			<rect x="380" y="50" width="22" height="1" fill="#b4c5cf" />
+
+			<g class="drift drift-c" fill="#ffffff">
+				<rect x="356" y="70" width="20" height="2" />
+				<rect x="352" y="72" width="28" height="3" />
+				<rect x="356" y="75" width="20" height="2" />
 			</g>
 
-			<!-- ============================================================
-			     HILLS (larger, more prominent; horizon moved up to ~440)
-			     ============================================================ -->
-			<!-- Far hills: soft, blue-tinted for aerial perspective -->
-			<path
-				d="M 0 470
-				   Q 140 410, 280 440
-				   Q 380 460, 500 430
-				   Q 620 400, 760 440
-				   Q 880 470, 1000 435
-				   Q 1120 405, 1260 445
-				   Q 1360 470, 1440 455
-				   L 1440 600 L 0 600 Z"
-				fill="url(#hillFar)" opacity="0.85"
-			/>
-			<!-- Mid hills with grass stroke highlights -->
-			<path
-				d="M 0 520
-				   Q 160 475, 320 500
-				   Q 440 520, 580 485
-				   Q 720 455, 860 495
-				   Q 980 525, 1120 490
-				   Q 1260 460, 1440 510
-				   L 1440 620 L 0 620 Z"
-				fill="url(#hillMid)"
-			/>
-			<!-- Near rolling hill (foreground) -->
-			<path
-				d="M 0 580
-				   Q 180 540, 360 565
-				   Q 500 585, 660 555
-				   Q 820 525, 980 570
-				   Q 1140 615, 1300 580
-				   Q 1380 565, 1440 580
-				   L 1440 900 L 0 900 Z"
-				fill="url(#field)"
-			/>
-
-			<!-- Horizontal streak texture on the far + mid hills -->
-			<g clip-path="inset(470px 0 320px 0)">
-				<rect y="440" width="1440" height="150" filter="url(#hillGrain)" opacity="0.65" />
+			<!-- ========== HILLS ========== -->
+			<!-- Far hill (light sage) -->
+			<g>
+				<rect x="0" y="130" width="80" height="40" fill="url(#hillFar)" />
+				<rect x="0" y="126" width="50" height="4" fill="url(#hillFar)" />
+				<rect x="80" y="134" width="80" height="36" fill="url(#hillFar)" />
+				<rect x="120" y="130" width="40" height="4" fill="url(#hillFar)" />
+				<rect x="160" y="132" width="100" height="38" fill="url(#hillFar)" />
+				<rect x="200" y="128" width="60" height="4" fill="url(#hillFar)" />
+				<rect x="260" y="136" width="100" height="34" fill="url(#hillFar)" />
+				<rect x="300" y="132" width="40" height="4" fill="url(#hillFar)" />
+				<rect x="360" y="130" width="120" height="40" fill="url(#hillFar)" />
+				<rect x="410" y="126" width="50" height="4" fill="url(#hillFar)" />
+			</g>
+			<!-- Distant tree silhouettes on far hill (tiny stepped shapes) -->
+			<g fill="#5e7550">
+				<rect x="186" y="126" width="3" height="4" />
+				<rect x="185" y="128" width="5" height="2" />
+				<rect x="260" y="132" width="3" height="4" />
+				<rect x="392" y="126" width="4" height="4" />
+				<rect x="391" y="128" width="6" height="2" />
+			</g>
+			<!-- Mid hill (deeper sage, overlaps closer ground) -->
+			<g>
+				<rect x="80" y="146" width="100" height="40" fill="url(#hillMid)" />
+				<rect x="120" y="142" width="40" height="4" fill="url(#hillMid)" />
+				<rect x="180" y="150" width="120" height="36" fill="url(#hillMid)" />
+				<rect x="220" y="146" width="40" height="4" fill="url(#hillMid)" />
+				<rect x="300" y="148" width="180" height="38" fill="url(#hillMid)" />
+				<rect x="360" y="144" width="60" height="4" fill="url(#hillMid)" />
 			</g>
 
-			<!-- Distant tree silhouettes: larger and more clearly tree-shaped
-			     (canopy blob + visible trunk rect). Also a couple of small
-			     farmhouse hints to break the uniformity. -->
-			<g fill="#667d5e" opacity="0.7">
-				<!-- grove near mid-distance -->
-				<ellipse cx="720" cy="452" rx="11" ry="14" />
-				<rect x="718" y="458" width="4" height="10" fill="#3d4e35" />
-				<ellipse cx="752" cy="448" rx="9" ry="12" />
-				<rect x="750" y="454" width="3" height="9" fill="#3d4e35" />
-				<!-- single taller tree -->
-				<ellipse cx="980" cy="442" rx="13" ry="17" />
-				<rect x="978" y="452" width="4" height="12" fill="#3d4e35" />
-				<!-- cluster right -->
-				<ellipse cx="1190" cy="452" rx="12" ry="15" />
-				<rect x="1188" y="460" width="4" height="10" fill="#3d4e35" />
-				<ellipse cx="1218" cy="456" rx="8" ry="11" />
-				<rect x="1216" y="462" width="3" height="8" fill="#3d4e35" />
+			<!-- ========== GRASS FIELD ========== -->
+			<rect y="160" width="480" height="110" fill="url(#grass)" />
+			<!-- scattered dark grass blade pixels for depth -->
+			<g fill="#4a6634">
+				<rect x="40" y="190" width="1" height="2" />
+				<rect x="68" y="200" width="1" height="2" />
+				<rect x="110" y="210" width="1" height="2" />
+				<rect x="140" y="224" width="1" height="2" />
+				<rect x="172" y="196" width="1" height="2" />
+				<rect x="204" y="214" width="1" height="2" />
+				<rect x="240" y="202" width="1" height="2" />
+				<rect x="268" y="232" width="1" height="2" />
+				<rect x="300" y="218" width="1" height="2" />
+				<rect x="340" y="244" width="1" height="2" />
+				<rect x="370" y="224" width="1" height="2" />
+				<rect x="408" y="198" width="1" height="2" />
+				<rect x="436" y="232" width="1" height="2" />
+				<rect x="84" y="250" width="1" height="2" />
+				<rect x="180" y="256" width="1" height="2" />
+				<rect x="264" y="262" width="1" height="2" />
+				<rect x="356" y="248" width="1" height="2" />
 			</g>
-			<!-- Sage vegetation dabs on the mid hills (softer than tree silhouettes) -->
-			<g fill="#7a9168" opacity="0.45">
-				<ellipse cx="640" cy="500" rx="28" ry="5" />
-				<ellipse cx="820" cy="510" rx="32" ry="5" />
-				<ellipse cx="1050" cy="505" rx="24" ry="4" />
-				<ellipse cx="1330" cy="515" rx="30" ry="5" />
-			</g>
-
-			<!-- Field speckle/grass texture over ground -->
-			<rect y="560" width="1440" height="340" filter="url(#fieldGrain)" opacity="0.6" />
-
-			<!-- Hand-drawn grass blades scattered across the field -->
-			<g stroke="#425c33" stroke-width="1" stroke-linecap="round" opacity="0.55">
-				<path d="M 260 660 Q 262 650, 264 642" fill="none" />
-				<path d="M 275 665 Q 277 656, 280 648" fill="none" />
-				<path d="M 310 678 Q 312 668, 315 660" fill="none" />
-				<path d="M 360 690 Q 362 680, 365 672" fill="none" />
-				<path d="M 420 705 Q 422 696, 425 688" fill="none" />
-				<path d="M 490 720 Q 492 710, 495 702" fill="none" />
-				<path d="M 560 735 Q 562 725, 565 717" fill="none" />
-				<path d="M 640 755 Q 642 745, 645 737" fill="none" />
-				<path d="M 730 775 Q 732 765, 735 757" fill="none" />
-				<path d="M 820 800 Q 822 790, 825 782" fill="none" />
-				<path d="M 900 820 Q 902 810, 905 802" fill="none" />
-				<path d="M 1000 845 Q 1002 835, 1005 827" fill="none" />
-				<path d="M 1100 865 Q 1102 855, 1105 847" fill="none" />
-				<path d="M 1200 840 Q 1202 830, 1205 822" fill="none" />
-				<path d="M 1300 810 Q 1302 800, 1305 792" fill="none" />
-				<path d="M 380 670 Q 378 660, 376 652" fill="none" />
-				<path d="M 470 695 Q 468 685, 466 677" fill="none" />
-				<path d="M 580 725 Q 578 715, 576 707" fill="none" />
-				<path d="M 690 755 Q 688 745, 686 737" fill="none" />
-				<path d="M 790 785 Q 788 775, 786 767" fill="none" />
-				<path d="M 890 810 Q 888 800, 886 792" fill="none" />
-				<path d="M 1020 835 Q 1018 825, 1016 817" fill="none" />
-				<path d="M 1150 850 Q 1148 840, 1146 832" fill="none" />
-				<path d="M 1270 825 Q 1268 815, 1266 807" fill="none" />
-			</g>
-
-			<!-- Painterly sage dabs for field volume -->
-			<g opacity="0.35">
-				<ellipse cx="420" cy="700" rx="50" ry="6" fill="#6a7f54" />
-				<ellipse cx="700" cy="740" rx="70" ry="7" fill="#617a4e" />
-				<ellipse cx="1000" cy="800" rx="80" ry="8" fill="#55704a" />
-				<ellipse cx="1250" cy="770" rx="60" ry="6" fill="#5e7852" />
+			<!-- a few lighter grass dabs (catching sun) -->
+			<g fill="#9ab870">
+				<rect x="58" y="196" width="1" height="1" />
+				<rect x="130" y="218" width="1" height="1" />
+				<rect x="244" y="208" width="1" height="1" />
+				<rect x="348" y="230" width="1" height="1" />
+				<rect x="420" y="210" width="1" height="1" />
 			</g>
 
 			<!-- =========================================================
-			     FIG TREE — large, occupying most of the left half.
-			     Wrapped in a translate() group so the tree + person +
-			     hotspots sit slightly down-and-left from the original
-			     composition (per user request).
+			     TREE + PERSON + HOTSPOTS (shifted slightly down-left)
 			     ========================================================= -->
-			<g class="tree-shift" transform="translate(-60 40)">
+			<g class="tree-shift" transform="translate(-8 4)">
+				<!-- ground shadow under tree -->
+				<rect x="52" y="162" width="52" height="2" fill="#4a6634" opacity="0.55" />
 
-			<!-- Root base bump in the ground -->
-			<ellipse cx="250" cy="700" rx="220" ry="22" fill="#4a5a38" opacity="0.55" />
-			<ellipse cx="250" cy="700" rx="180" ry="14" fill="#3a4a2d" opacity="0.5" />
-
-			<!-- Main trunk: big, gnarled, full height -->
-			<path
-				d="M 180 700
-				   C 170 560, 150 420, 180 280
-				   C 200 200, 220 140, 260 90
-				   C 275 80, 305 80, 320 95
-				   C 345 140, 360 210, 345 300
-				   C 330 420, 335 560, 345 700
-				   C 345 710, 180 712, 180 700 Z"
-				fill="url(#trunk)"
-			/>
-			<!-- Bark shading on the shadow side -->
-			<path
-				d="M 180 700
-				   C 170 560, 150 420, 180 280
-				   C 195 210, 210 150, 240 100
-				   C 235 160, 225 240, 220 340
-				   C 215 460, 210 580, 215 700 Z"
-				fill="#2a1d14" opacity="0.55"
-			/>
-			<!-- Bark highlight stripes -->
-			<g stroke="#6b4c36" stroke-width="1.8" fill="none" opacity="0.45" stroke-linecap="round">
-				<path d="M 240 680 C 238 560, 244 420, 256 280 C 262 220, 272 160, 285 110" />
-				<path d="M 268 690 C 266 560, 272 420, 284 280 C 290 220, 300 160, 310 115" />
-				<path d="M 300 690 C 300 560, 308 420, 320 280 C 326 220, 332 160, 330 110" />
-			</g>
-			<!-- Bark knots -->
-			<g fill="#1a0f08" opacity="0.75">
-				<ellipse cx="205" cy="520" rx="8" ry="4" />
-				<ellipse cx="310" cy="430" rx="6" ry="3" />
-				<ellipse cx="240" cy="360" rx="7" ry="3" />
-				<ellipse cx="295" cy="230" rx="5" ry="3" />
-			</g>
-			<!-- Bark texture, clipped to the trunk shape so texture doesn't bleed -->
-			<g clip-path="url(#trunkClip)">
-				<rect x="150" y="80" width="220" height="640" filter="url(#barkTex)" opacity="0.55" />
-			</g>
-
-			<!-- Major branches (trunk-anchored, radiating out) — rendered
-			     between the dark back canopy and mid/front leaves so the
-			     skeleton shows as dark slashes through the foliage. -->
-			<g class="branches-base" stroke="url(#trunk)" fill="none" stroke-linecap="round">
-				<path d="M 310 180 Q 400 140, 500 110" stroke-width="22" />
-				<path d="M 255 130 Q 180 100, 95 80" stroke-width="20" />
-				<path d="M 330 260 Q 430 240, 540 230" stroke-width="16" />
-				<path d="M 180 320 Q 100 310, 30 320" stroke-width="14" />
-				<path d="M 340 380 Q 470 390, 580 400" stroke-width="14" />
-				<path d="M 500 110 Q 540 90, 580 70" stroke-width="6" />
-				<path d="M 540 230 Q 590 220, 630 215" stroke-width="5" />
-				<path d="M 95 80 Q 60 70, 20 65" stroke-width="6" />
-			</g>
-
-			<!-- ============================================================
-			     CANOPY — a few blobby foliage masses with branch skeleton
-			     peeking through, and individually visible palmate fig leaves
-			     scattered on top (larger at the rim so lobes protrude).
-			     ============================================================ -->
-			<g class="canopy">
-				<!-- Back/underside blobs -->
-				<ellipse cx="260" cy="180" rx="200" ry="155" fill="url(#foliageDark)" />
-				<ellipse cx="120" cy="180" rx="120" ry="100" fill="url(#foliageDark)" opacity="0.95" />
-				<ellipse cx="430" cy="170" rx="145" ry="115" fill="url(#foliageDark)" opacity="0.95" />
-
-				<!-- Branch skeleton: dark slashes through the foliage -->
-				<g class="branch-skeleton" stroke="url(#branchDark)" fill="none" stroke-linecap="round" opacity="0.85">
-					<path d="M 310 180 Q 400 140, 500 110" stroke-width="11" />
-					<path d="M 255 130 Q 180 100, 95 80" stroke-width="10" />
-					<path d="M 330 260 Q 430 240, 540 230" stroke-width="8" />
-					<path d="M 340 380 Q 470 390, 580 400" stroke-width="7" />
-					<path d="M 180 320 Q 100 310, 30 320" stroke-width="7" />
-					<path d="M 290 150 Q 340 100, 380 70" stroke-width="5" />
-					<path d="M 440 130 Q 480 100, 520 85" stroke-width="4" />
+				<!-- Trunk: stepped pixel shape -->
+				<g>
+					<!-- base (wider, rooting into ground) -->
+					<rect x="54" y="154" width="48" height="8" fill="#3a2614" />
+					<rect x="56" y="150" width="44" height="4" fill="#4a3020" />
+					<!-- body, gradually narrower going up -->
+					<rect x="60" y="120" width="36" height="30" fill="#4a3020" />
+					<rect x="62" y="90" width="32" height="30" fill="#4a3020" />
+					<rect x="64" y="60" width="28" height="30" fill="#4a3020" />
+					<rect x="66" y="40" width="24" height="20" fill="#4a3020" />
+					<!-- bark highlight column (left side) -->
+					<rect x="60" y="120" width="3" height="30" fill="#5e3f2a" />
+					<rect x="62" y="90" width="3" height="30" fill="#5e3f2a" />
+					<rect x="64" y="60" width="3" height="30" fill="#5e3f2a" />
+					<rect x="66" y="40" width="3" height="20" fill="#5e3f2a" />
+					<!-- bark shadow column (right side) -->
+					<rect x="92" y="120" width="4" height="30" fill="#2a1a0e" />
+					<rect x="90" y="90" width="4" height="30" fill="#2a1a0e" />
+					<rect x="88" y="60" width="4" height="30" fill="#2a1a0e" />
+					<rect x="86" y="40" width="4" height="20" fill="#2a1a0e" />
+					<!-- bark knots -->
+					<rect x="72" y="100" width="2" height="2" fill="#1a0e06" />
+					<rect x="82" y="130" width="2" height="2" fill="#1a0e06" />
+					<rect x="76" y="70" width="2" height="2" fill="#1a0e06" />
+					<!-- subtle bark streaks -->
+					<rect x="74" y="120" width="1" height="20" fill="#3a2614" />
+					<rect x="82" y="80" width="1" height="30" fill="#3a2614" />
 				</g>
 
-				<!-- Lit/front blobs on top of branches -->
-				<ellipse cx="270" cy="140" rx="180" ry="100" fill="url(#foliageMid)" opacity="0.9" />
-				<ellipse cx="430" cy="270" rx="130" ry="95" fill="url(#foliageMid)" opacity="0.85" />
-				<ellipse cx="180" cy="290" rx="110" ry="90" fill="url(#foliageMid)" opacity="0.85" />
-				<ellipse cx="310" cy="360" rx="140" ry="75" fill="url(#foliageMid)" opacity="0.85" />
-				<!-- Highlight blobs -->
-				<ellipse cx="255" cy="105" rx="150" ry="60" fill="url(#foliageLight)" opacity="0.55" />
-				<ellipse cx="420" cy="225" rx="85" ry="50" fill="url(#foliageLight)" opacity="0.5" />
+				<!-- Canopy: blocky stacked blobs with stepped edges -->
+				<g class="canopy">
+					<!-- back dark mass -->
+					<rect x="26" y="28" width="112" height="40" fill="#2e4020" />
+					<rect x="22" y="34" width="120" height="28" fill="#2e4020" />
+					<rect x="30" y="22" width="100" height="6" fill="#2e4020" />
+					<rect x="38" y="16" width="84" height="6" fill="#2e4020" />
+					<rect x="18" y="42" width="128" height="18" fill="#2e4020" />
+					<rect x="26" y="60" width="112" height="8" fill="#2e4020" />
+					<rect x="36" y="68" width="92" height="4" fill="#2e4020" />
+					<!-- mid green -->
+					<rect x="30" y="30" width="104" height="30" fill="#3d5830" />
+					<rect x="26" y="38" width="112" height="20" fill="#3d5830" />
+					<rect x="34" y="24" width="88" height="6" fill="#3d5830" />
+					<rect x="42" y="18" width="76" height="6" fill="#3d5830" />
+					<rect x="22" y="46" width="120" height="12" fill="#3d5830" />
+					<rect x="30" y="58" width="104" height="4" fill="#3d5830" />
+					<!-- highlight band (sun-lit upper-left) -->
+					<rect x="42" y="24" width="60" height="6" fill="#5a7d46" />
+					<rect x="38" y="30" width="70" height="4" fill="#5a7d46" />
+					<rect x="50" y="18" width="40" height="6" fill="#5a7d46" />
+					<rect x="28" y="42" width="24" height="6" fill="#5a7d46" />
+					<rect x="34" y="48" width="16" height="4" fill="#5a7d46" />
 
-				<!-- Individually visible fig leaves scattered on top (rim leaves
-				     larger so palmate lobes show against the sky) -->
-				{leaves.map((l) => (
-					<use
-						href={SHADE_SYMBOL[l.shade]}
-						x={-60}
-						y={-80}
-						width={120}
-						height={90}
-						transform={`translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.r.toFixed(1)}) scale(${l.s.toFixed(2)})`}
-					/>
-				))}
-			</g>
-
-			<!-- Static (decorative) figs scattered on the tree — each with
-			     a small random-looking tilt around its own center so stems
-			     remain pointing roughly up (i.e. figs hang downward). -->
-			<g opacity="0.95">
-				<use href="#ripeFig" x="200" y="150" width="20" height="24" transform="rotate(-14 210 162)" />
-				<use href="#ripeFig" x="400" y="170" width="18" height="22" transform="rotate(8 409 181)" />
-				<use href="#ripeFig" x="140" y="240" width="19" height="23" transform="rotate(16 149.5 251.5)" />
-				<use href="#ripeFig" x="510" y="340" width="18" height="22" transform="rotate(-7 519 351)" />
-				<use href="#ripeFig" x="360" y="300" width="17" height="21" transform="rotate(19 368.5 310.5)" />
-				<use href="#ripeFig" x="260" y="60" width="16" height="20" transform="rotate(-12 268 70)" />
-				<use href="#ripeFig" x="450" y="250" width="17" height="21" transform="rotate(5 458.5 260.5)" />
-				<use href="#ripeFig" x="100" y="180" width="18" height="22" transform="rotate(-9 109 191)" />
-			</g>
-
-			<!-- =========================================================
-			     PERSON — seated at base of tree, enlarged + tonal
-			     Shifted right (off the trunk shadow) and scaled 1.4x.
-			     Two tonal values: #2a2117 (dark) body + #5e6f4a (shirt)
-			     ========================================================= -->
-			<g transform="translate(365, 620) scale(1.4)">
-				<!-- ground shadow -->
-				<ellipse cx="28" cy="60" rx="82" ry="8" fill="#394a2b" opacity="0.5" />
-
-				<!-- extended leg (back) - drawn first so other limbs overlap -->
-				<g fill="#2a2117">
-					<path d="M 34 10
-					         Q 64 24, 86 42
-					         Q 92 48, 86 52
-					         Q 72 50, 52 38
-					         Q 36 28, 30 18 Z" />
-					<!-- shoe on extended leg -->
-					<ellipse cx="92" cy="48" rx="11" ry="5" fill="#1a130c" />
+					<!-- Individual pixel fig leaves on the canopy rim -->
+					<g>
+						<!-- top lobes -->
+						<use href="#figLeaf" x="34" y="6" width="12" height="12" />
+						<use href="#figLeaf" x="56" y="2" width="12" height="12" />
+						<use href="#figLeaf" x="82" y="2" width="12" height="12" />
+						<use href="#figLeaf" x="106" y="6" width="12" height="12" />
+						<!-- sides -->
+						<use href="#figLeaf" x="16" y="18" width="12" height="12" />
+						<use href="#figLeaf" x="126" y="18" width="12" height="12" />
+						<use href="#figLeaf" x="10" y="36" width="12" height="12" />
+						<use href="#figLeaf" x="134" y="36" width="12" height="12" />
+						<!-- bottom -->
+						<use href="#figLeaf" x="22" y="58" width="12" height="12" />
+						<use href="#figLeaf" x="50" y="64" width="12" height="12" />
+						<use href="#figLeaf" x="82" y="62" width="12" height="12" />
+						<use href="#figLeaf" x="112" y="58" width="12" height="12" />
+					</g>
 				</g>
 
-				<!-- bent knee (front leg) - pants dark -->
-				<path d="M 4 28
-				         Q 28 16, 48 -2
-				         Q 54 -10, 46 -14
-				         Q 36 -12, 24 0
-				         Q 6 16, -4 26 Z"
-					fill="#2a2117"
-				/>
-				<!-- shoe at bent knee tip -->
-				<ellipse cx="48" cy="-10" rx="8" ry="4" fill="#1a130c" transform="rotate(-25 48 -10)" />
-
-				<!-- torso (shirt: olive/sage so it separates from trunk) -->
-				<path d="M -10 -8
-				         Q -16 14, -8 34
-				         Q 4 40, 18 36
-				         Q 28 26, 28 8
-				         Q 26 -10, 18 -20
-				         Q 4 -22, -10 -8 Z"
-					fill="#5e6f4a"
-				/>
-				<!-- shirt collar/shadow band -->
-				<path d="M -8 -14
-				         Q 2 -20, 18 -18
-				         Q 22 -10, 16 -6
-				         Q 4 -4, -8 -8 Z"
-					fill="#485638"
-				/>
-				<!-- arm resting on bent knee (shirt color, with darker forearm) -->
-				<path d="M 18 -4
-				         Q 36 0, 46 8
-				         Q 48 12, 44 14
-				         Q 30 12, 16 4 Z"
-					fill="#5e6f4a"
-				/>
-				<path d="M 38 10
-				         Q 48 14, 54 20
-				         Q 52 24, 46 22
-				         Q 36 18, 32 14 Z"
-					fill="#2a2117"
-				/>
-
-				<!-- neck -->
-				<rect x="4" y="-24" width="10" height="10" rx="2" fill="#7a5a42" />
-
-				<!-- head (skin-tone warm brown, distinct from shirt and trunk) -->
-				<circle cx="10" cy="-34" r="13" fill="#8a6a4c" />
-				<!-- ear hint -->
-				<ellipse cx="-2" cy="-33" rx="2" ry="3" fill="#6a4e38" />
-				<!-- hair: darker than skin, covers crown -->
-				<path d="M -3 -44
-				         Q 10 -52, 23 -42
-				         Q 24 -36, 20 -34
-				         Q 14 -38, 10 -38
-				         Q 4 -38, -2 -34
-				         Q -5 -38, -3 -44 Z"
-					fill="#1a130c"
-				/>
-
-				<!-- subtle leg separation line between bent + extended legs -->
-				<path d="M 4 28 Q 16 24, 30 18" stroke="#1a130c" stroke-width="1.5" fill="none" opacity="0.5" />
-			</g>
-
-			<!-- =========================================================
-			     CLICKABLE HOTSPOTS — figs + leaves on the tree.
-			     The leaves are positioned OUTSIDE the dense canopy mass so
-			     they clearly read as "a fig leaf protruding" rather than
-			     being lost in the foliage. A warm cream rim-stroke gives a
-			     subtle visual tell that these are interactive.
-			     ========================================================= -->
-			<g class="leaves">
-				{/* notes: upper-right protruding leaf, tip angled outward from canopy */}
-				<g class="hotspot hotspot-leaf" data-window="notes" tabindex="0" role="button" aria-label="Open notes" transform="translate(640 60) rotate(55) scale(1.55)">
-					<title>notes</title>
-					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
-					<circle cx="0" cy="-40" r="48" fill="transparent" />
+				<!-- Static decorative figs on the tree -->
+				<g class="decor-figs">
+					<use href="#ripeFig" x="48" y="38" width="8" height="10" transform="rotate(-14 52 43)" />
+					<use href="#ripeFig" x="94" y="34" width="8" height="10" transform="rotate(10 98 39)" />
+					<use href="#ripeFig" x="72" y="52" width="8" height="10" transform="rotate(-7 76 57)" />
+					<use href="#ripeFig" x="114" y="50" width="8" height="10" transform="rotate(15 118 55)" />
+					<use href="#ripeFig" x="36" y="54" width="8" height="10" transform="rotate(-18 40 59)" />
 				</g>
-				{/* contact: left-side protruding leaf clearly outside the canopy mass */}
-				<g class="hotspot hotspot-leaf" data-window="contact" tabindex="0" role="button" aria-label="Open contact" transform="translate(10 220) rotate(-105) scale(1.55)">
-					<title>contact</title>
-					<use href="#figLeaf" x="-60" y="-80" width="120" height="90" fill="url(#foliageLight)" />
-					<circle cx="0" cy="-40" r="46" fill="transparent" />
-				</g>
-			</g>
 
-			<g class="figs">
-				{/* The 'about' fig carries the breathe pulse + one-shot bob so
-				    first-time visitors see that something on the tree is alive
-				    and clickable. Only one hotspot gets the continuous pulse —
-				    five would be noisy. Animations are gated via
-				    prefers-reduced-motion below. */}
-				<g class="hotspot hotspot-pulse" data-window="about" tabindex="0" role="button" aria-label="Open about">
-					<title>about</title>
-					<g transform="translate(300 200) scale(1.3)" filter="url(#figShadow)">
-						<g class="pulse-target">
-							<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(6 0 -4)" />
+				<!-- Person: Pokémon-style overworld pixel sprite, sitting -->
+				<g transform="translate(96 132)">
+					<!-- ground shadow -->
+					<rect x="-2" y="30" width="30" height="2" fill="#4a6634" opacity="0.55" />
+					<!-- hair top -->
+					<rect x="4" y="0" width="8" height="2" fill="#1a100a" />
+					<rect x="3" y="2" width="1" height="2" fill="#1a100a" />
+					<rect x="12" y="2" width="1" height="3" fill="#1a100a" />
+					<!-- head (skin) -->
+					<rect x="4" y="2" width="8" height="5" fill="#d9a57c" />
+					<!-- hair bangs -->
+					<rect x="4" y="2" width="2" height="1" fill="#1a100a" />
+					<rect x="10" y="2" width="2" height="1" fill="#1a100a" />
+					<!-- eye -->
+					<rect x="10" y="4" width="1" height="2" fill="#1a100a" />
+					<!-- face shadow -->
+					<rect x="4" y="6" width="8" height="1" fill="#b88660" />
+					<!-- neck -->
+					<rect x="6" y="7" width="5" height="1" fill="#b88660" />
+					<!-- torso (olive shirt) -->
+					<rect x="2" y="8" width="13" height="7" fill="#5d7944" />
+					<!-- shirt collar shadow -->
+					<rect x="5" y="8" width="7" height="1" fill="#46593a" />
+					<!-- arm resting on bent knee (shirt then skin) -->
+					<rect x="14" y="11" width="6" height="2" fill="#5d7944" />
+					<rect x="18" y="13" width="4" height="2" fill="#b88660" />
+					<!-- shirt bottom shadow band -->
+					<rect x="2" y="14" width="13" height="1" fill="#46593a" />
+					<!-- bent front leg (pants) -->
+					<rect x="4" y="15" width="8" height="2" fill="#2a2117" />
+					<!-- extended leg going right -->
+					<rect x="12" y="15" width="12" height="3" fill="#2a2117" />
+					<rect x="16" y="18" width="10" height="2" fill="#2a2117" />
+					<!-- shoes -->
+					<rect x="24" y="18" width="4" height="3" fill="#1a0e06" />
+					<rect x="4" y="17" width="8" height="2" fill="#1a0e06" />
+				</g>
+
+				<!-- =========================================================
+				     CLICKABLE HOTSPOTS — pixel figs + leaves
+				     ========================================================= -->
+				<g class="leaves">
+					<!-- notes: upper-right leaf, enlarged 2x with rotation -->
+					<g class="hotspot hotspot-leaf" data-window="notes" tabindex="0" role="button" aria-label="Open notes">
+						<title>notes</title>
+						<use href="#figLeaf" x="132" y="4" width="20" height="20" transform="rotate(30 142 14)" />
+						<rect x="126" y="-2" width="32" height="32" fill="transparent" />
+					</g>
+					<!-- contact: upper-left leaf -->
+					<g class="hotspot hotspot-leaf" data-window="contact" tabindex="0" role="button" aria-label="Open contact">
+						<title>contact</title>
+						<use href="#figLeaf" x="2" y="20" width="20" height="20" transform="rotate(-40 12 30)" />
+						<rect x="-4" y="14" width="32" height="32" fill="transparent" />
+					</g>
+				</g>
+
+				<g class="figs">
+					<!-- about: continuously pulsing, sized larger than decor figs -->
+					<g class="hotspot hotspot-pulse" data-window="about" tabindex="0" role="button" aria-label="Open about">
+						<title>about</title>
+						<g class="pulse-target" transform="translate(60 38)">
+							<use href="#ripeFig" x="-7" y="-8" width="14" height="18" transform="rotate(6 0 1)" />
 						</g>
+						<rect x="50" y="28" width="20" height="24" fill="transparent" />
 					</g>
-					<circle cx="300" cy="200" r="26" fill="transparent" />
-				</g>
-
-				<g class="hotspot" data-window="projects" tabindex="0" role="button" aria-label="Open projects">
-					<title>projects</title>
-					<g transform="translate(170 380) scale(1.35)" filter="url(#figShadow)">
-						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(-14 0 -4)" />
-						<use href="#ripeFig" x="8" y="-22" width="36" height="44" transform="rotate(11 26 0)" />
+					<!-- projects -->
+					<g class="hotspot" data-window="projects" tabindex="0" role="button" aria-label="Open projects">
+						<title>projects</title>
+						<g transform="translate(34 66)">
+							<use href="#ripeFig" x="-7" y="-8" width="14" height="18" transform="rotate(-14 0 1)" />
+						</g>
+						<rect x="24" y="56" width="20" height="24" fill="transparent" />
 					</g>
-					<circle cx="175" cy="380" r="32" fill="transparent" />
-				</g>
-
-				<g class="hotspot" data-window="now" tabindex="0" role="button" aria-label="Open now">
-					<title>now</title>
-					<g transform="translate(460 340) scale(1.25)" filter="url(#figShadow)">
-						<use href="#ripeFig" x="-22" y="-30" width="44" height="52" transform="rotate(13 0 -4)" />
+					<!-- now -->
+					<g class="hotspot" data-window="now" tabindex="0" role="button" aria-label="Open now">
+						<title>now</title>
+						<g transform="translate(108 60)">
+							<use href="#ripeFig" x="-7" y="-8" width="14" height="18" transform="rotate(13 0 1)" />
+						</g>
+						<rect x="98" y="50" width="20" height="24" fill="transparent" />
 					</g>
-					<circle cx="460" cy="340" r="26" fill="transparent" />
 				</g>
 			</g>
-
-			</g><!-- /.tree-shift -->
-
-			<!-- Overall film grain pass on top of everything -->
-			<rect width="1440" height="900" filter="url(#grain)" opacity="0.3" pointer-events="none" />
 		</svg>
 
 		<!-- Windows -->
@@ -732,110 +400,79 @@ const leaves: Leaf[] = [
 		width: 100vw;
 		height: 100vh;
 		overflow: hidden;
-		background: #0a0a0a;
+		background: #7ea6c2;
 	}
-	/* On mobile the SVG is `meet`-fit (letterboxed top/bottom) so the
-	   rect background shows through. Match it to the scene's sky→hill
-	   palette so the letterbox blends with the painting. */
 	@media (max-width: 640px) {
 		.scene {
-			background: linear-gradient(
-				to bottom,
-				#8ca8bf 0%,
-				#afc4d2 20%,
-				#d6dcd6 50%,
-				#8aa181 55%,
-				#617955 100%
-			);
+			background: linear-gradient(to bottom, #7ea6c2 0%, #b5ccd8 45%, #8aa478 55%, #6a8a4c 100%);
 		}
 	}
 	.landscape {
 		width: 100%;
 		height: 100%;
 		display: block;
+		/* Render the scaled-up SVG with nearest-neighbor so the pixel
+		   aesthetic holds at any viewport size. */
+		image-rendering: pixelated;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: crisp-edges;
 	}
 	.hotspot {
 		cursor: pointer;
-		transition: filter 160ms ease, transform 160ms ease;
+		transition: filter 140ms ease, transform 140ms ease;
 		transform-box: fill-box;
 		transform-origin: center;
 	}
 	.hotspot:hover {
-		filter: brightness(1.18) drop-shadow(0 0 8px rgba(255, 236, 190, 0.75));
-		transform: scale(1.08);
+		filter: brightness(1.2) drop-shadow(1px 1px 0 #f4e3a8);
+		transform: scale(1.12);
 	}
-	.hotspot:focus {
-		outline: none;
-	}
+	.hotspot:focus { outline: none; }
 	.hotspot:focus-visible {
-		filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 236, 190, 0.9));
-		transform: scale(1.06);
-		outline: 2px dashed #3a5070;
-		outline-offset: 4px;
+		filter: brightness(1.22);
+		outline: 2px dashed #f4e3a8;
+		outline-offset: 2px;
 	}
-	/* Warm rim on interactive leaves so a user intuits they're clickable */
-	.hotspot-leaf use {
-		stroke: #f4e3a8;
-		stroke-width: 1.2;
-		stroke-opacity: 0.85;
-		paint-order: stroke fill;
-		filter: drop-shadow(0 0 4px rgba(246, 230, 170, 0.35));
-	}
+	/* Small warm pixel shadow on interactive leaves */
+	.hotspot-leaf use { filter: drop-shadow(1px 1px 0 #3d5220); }
 
-	/* Continuous "breathe" pulse on one hotspot (the 'about' fig) so a
-	   first-time visitor notices at least one clickable thing on the
-	   tree. Keep it gentle — this shouldn't be a flashing ad. The
-	   .pulse-target sits inside the parent's translate/scale, so we
-	   animate a small relative scale around (0,0). */
 	@keyframes breathe {
-		0%   { transform: scale(1); filter: drop-shadow(0 0 0 rgba(246, 230, 170, 0)); }
-		50%  { transform: scale(1.1); filter: drop-shadow(0 0 6px rgba(246, 230, 170, 0.8)); }
-		100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(246, 230, 170, 0)); }
+		0%   { transform: scale(1); }
+		50%  { transform: scale(1.12); }
+		100% { transform: scale(1); }
 	}
 	.hotspot-pulse .pulse-target {
 		transform-box: fill-box;
 		transform-origin: center;
-		animation: breathe 3.2s ease-in-out infinite;
+		animation: breathe 3.2s steps(4, end) infinite;
 	}
-	.hotspot-pulse:hover .pulse-target {
-		/* Pause the pulse while the user is interacting — hover takes over. */
-		animation-play-state: paused;
-	}
+	.hotspot-pulse:hover .pulse-target { animation-play-state: paused; }
 
-	/* One-shot "pssst" bob ~2s after load: every hotspot dips 3px down
-	   then settles, so the tree looks momentarily alive and the eye
-	   catches all five clickable spots. Runs once, then stops. The
-	   continuous .hotspot-pulse keeps going after. */
 	@keyframes pssst {
 		0%   { transform: translate(0, 0); }
-		20%  { transform: translate(0, -2px); }
-		45%  { transform: translate(0, 3px); }
-		70%  { transform: translate(0, -1px); }
+		25%  { transform: translate(0, -1px); }
+		50%  { transform: translate(0, 1px); }
 		100% { transform: translate(0, 0); }
 	}
 	.hotspot.pssst {
 		transform-box: fill-box;
 		transform-origin: center;
-		animation: pssst 1.6s ease-out 1;
+		animation: pssst 1.2s steps(4, end) 1;
 	}
-
 	@media (prefers-reduced-motion: reduce) {
 		.hotspot-pulse .pulse-target { animation: none; }
 		.hotspot.pssst { animation: none; }
-	}
-
-	/* Slow painterly cloud drift — three staggered offsets so the sky
-	   feels alive without reading as synchronized motion. Respects
-	   reduced-motion preference. */
-	@keyframes driftA { from { transform: translateX(0); } to { transform: translateX(40px); } }
-	@keyframes driftB { from { transform: translateX(0); } to { transform: translateX(-34px); } }
-	@keyframes driftC { from { transform: translateX(0); } to { transform: translateX(26px); } }
-	.drift-a { animation: driftA 90s ease-in-out infinite alternate; }
-	.drift-b { animation: driftB 110s ease-in-out infinite alternate; }
-	.drift-c { animation: driftC 130s ease-in-out infinite alternate; }
-	@media (prefers-reduced-motion: reduce) {
 		.drift-a, .drift-b, .drift-c { animation: none; }
 	}
+
+	/* Very slow cloud drift — small pixel-step offsets so it still feels
+	   tile-based rather than continuous. */
+	@keyframes driftA { from { transform: translateX(0); } to { transform: translateX(10px); } }
+	@keyframes driftB { from { transform: translateX(0); } to { transform: translateX(-8px); } }
+	@keyframes driftC { from { transform: translateX(0); } to { transform: translateX(6px); } }
+	.drift-a { animation: driftA 80s steps(10, end) infinite alternate; }
+	.drift-b { animation: driftB 100s steps(8, end) infinite alternate; }
+	.drift-c { animation: driftC 120s steps(6, end) infinite alternate; }
 </style>
 
 <script>
@@ -843,44 +480,19 @@ const leaves: Leaf[] = [
 	if (scene) {
 		let topZ = 10;
 
-		// === Mobile scene adaptation ==========================================
-		// The scene was composed for a 1440×900 viewBox with the tree in
-		// x=0..620. On a narrow (≤ 640px) viewport we zoom into that left
-		// slab so the tree + person + lower hills dominate instead of being
-		// letterboxed or cropped oddly. We also enlarge every hotspot's
-		// transparent hit-target circle so each tap target is ≥ 44px CSS.
+		// Mobile: zoom into the left portion of the scene so the tree fills
+		// the narrow viewport instead of the sky dominating.
 		const svg = scene.querySelector<SVGSVGElement>('svg.landscape');
 		const mobileQuery = window.matchMedia('(max-width: 640px)');
 		const applyMobileScene = (isMobile: boolean) => {
 			if (!svg) return;
-			const desktopVB = svg.dataset.desktopViewbox || '0 0 1440 900';
-			const mobileVB = svg.dataset.mobileViewbox || '-20 -30 720 930';
+			const desktopVB = svg.dataset.desktopViewbox || '0 0 480 270';
+			const mobileVB = svg.dataset.mobileViewbox || '0 0 200 270';
 			svg.setAttribute('viewBox', isMobile ? mobileVB : desktopVB);
-			// On mobile, `meet` shows the entire tree + hotspots (letterboxed
-			// by the `.scene` sky-matching background). On desktop we keep
-			// `xMinYMid slice` so the left-anchored tree stays in place.
 			svg.setAttribute(
 				'preserveAspectRatio',
 				isMobile ? 'xMidYMid meet' : 'xMinYMid slice',
 			);
-			// Bump hit-target circles (the transparent <circle> inside each
-			// hotspot group) so touch areas clear the 44×44 Apple guideline.
-			// Mobile shows a 720×930 viewBox letterboxed in 375×812, so each
-			// SVG unit ≈ 0.52 CSS px — a 26-unit circle = ~13.5 CSS px before
-			// bumping. We push r to 48 on mobile, which renders ~25 CSS px
-			// radius ≈ 50 CSS px diameter.
-			scene
-				.querySelectorAll<SVGCircleElement>('.hotspot > circle')
-				.forEach((c) => {
-					if (isMobile) {
-						if (!c.dataset.origR) {
-							c.dataset.origR = c.getAttribute('r') || '';
-						}
-						c.setAttribute('r', '48');
-					} else if (c.dataset.origR) {
-						c.setAttribute('r', c.dataset.origR);
-					}
-				});
 		};
 		applyMobileScene(mobileQuery.matches);
 		if ('addEventListener' in mobileQuery) {
@@ -913,10 +525,7 @@ const leaves: Leaf[] = [
 			});
 		});
 
-		// One-shot "pssst" bob ~1.8s after load so first-time visitors
-		// catch the fact that things on the tree respond. The class is
-		// removed after the animation completes so it doesn't loop.
-		// Respect prefers-reduced-motion.
+		// One-shot pssst bob ~1.8s after load
 		const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
 		if (!rm.matches) {
 			window.setTimeout(() => {
@@ -933,10 +542,7 @@ const leaves: Leaf[] = [
 			}, 1800);
 		}
 
-		// Drag is disabled on narrow viewports — windows are centered via CSS
-		// and overriding `left/top` with per-pixel values would fight that.
 		const mobileMq = window.matchMedia('(max-width: 640px)');
-
 		scene.querySelectorAll<HTMLElement>('.window').forEach((win) => {
 			win.addEventListener('mousedown', () => bringToFront(win));
 
