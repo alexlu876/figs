@@ -234,9 +234,6 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<rect x="126" y="119" width="1"  height="1" fill="url(#mountLit)" />
 				<rect x="134" y="123" width="1"  height="1" fill="url(#mountLit)" />
 			</g>
-			<!-- Outline pixel at peak edge -->
-			<rect x="110" y="109" width="1" height="1" fill="#565c70" />
-			<rect x="112" y="109" width="1" height="1" fill="#565c70" />
 
 			<!-- Mountain 2: tall central peak (peak x=224, y=104) with snow cap -->
 			<g>
@@ -276,9 +273,6 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<rect x="243" y="117" width="1"  height="1" fill="url(#mountLit)" />
 				<rect x="250" y="121" width="1"  height="1" fill="url(#mountLit)" />
 			</g>
-			<!-- Peak outline (darker edge pixels) -->
-			<rect x="222" y="103" width="1" height="1" fill="#565c70" />
-			<rect x="225" y="103" width="1" height="1" fill="#565c70" />
 			<!-- snow cap -->
 			<rect x="223" y="103" width="2" height="2" fill="#e6e9ec" />
 			<rect x="221" y="105" width="2" height="1" fill="#e6e9ec" />
@@ -309,8 +303,6 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<rect x="348" y="115" width="1"  height="1" fill="url(#mountLit)" />
 				<rect x="356" y="121" width="1"  height="1" fill="url(#mountLit)" />
 			</g>
-			<rect x="338" y="111" width="1" height="1" fill="#565c70" />
-			<rect x="340" y="111" width="1" height="1" fill="#565c70" />
 
 			<!-- Mountain 4: far right (peak x=430, y=116) — base extended far
 			     enough to dip under the lowest hill columns (~y=134). -->
@@ -338,84 +330,95 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<rect x="438" y="121" width="1"  height="1" fill="url(#mountLit)" />
 				<rect x="446" y="127" width="1"  height="1" fill="url(#mountLit)" />
 			</g>
-			<rect x="428" y="115" width="1" height="1" fill="#565c70" />
-			<rect x="430" y="115" width="1" height="1" fill="#565c70" />
 
-			<!-- ========== CLOUDS (fluffy multi-lobe, Pokemon-style shading) ==========
-			     Each cloud has a distinct multi-lobe profile with 4 shade tiers:
-			     top white, body, underside shadow, deep shadow. Less squared,
-			     more cumulus. -->
+			<!-- ========== CLOUDS (gap-free, body-first, multi-lobe) ==========
+			     Each cloud is painted as a solid body rect first, then lobe
+			     bumps on top, then shadow rows on bottom — so the silhouette
+			     is always continuous (no visible gaps between lobes). -->
 
 			<!-- Cloud A: big three-lobe cumulus, upper-center -->
 			<g class="drift drift-a">
-				<!-- Lobe tops (catches light) -->
-				<rect x="282" y="8"  width="8"  height="1" fill="#ffffff" />
-				<rect x="256" y="12" width="6"  height="1" fill="#ffffff" />
-				<rect x="304" y="14" width="6"  height="1" fill="#ffffff" />
-				<!-- Upper lobe bodies -->
-				<rect x="280" y="9"  width="12" height="2" fill="#ffffff" />
-				<rect x="254" y="13" width="10" height="2" fill="#ffffff" />
-				<rect x="302" y="15" width="10" height="2" fill="#ffffff" />
-				<rect x="278" y="11" width="16" height="2" fill="#ffffff" />
-				<rect x="252" y="15" width="14" height="2" fill="#ffffff" />
-				<rect x="300" y="17" width="14" height="2" fill="#ffffff" />
-				<!-- Merged upper body -->
-				<rect x="252" y="17" width="64" height="2" fill="#ffffff" />
-				<rect x="250" y="19" width="68" height="2" fill="#ffffff" />
-				<!-- Widest body rows -->
-				<rect x="248" y="21" width="72" height="3" fill="#ffffff" />
-				<rect x="250" y="24" width="70" height="2" fill="#f2f7fa" />
+				<!-- Solid body (ensures no gaps beneath the lobes) -->
+				<rect x="248" y="14" width="72" height="12" fill="#ffffff" />
+				<!-- Left lobe bump -->
+				<rect x="254" y="12" width="14" height="2" fill="#ffffff" />
+				<rect x="256" y="10" width="10" height="2" fill="#ffffff" />
+				<rect x="258" y="9"  width="6"  height="1" fill="#ffffff" />
+				<!-- Middle lobe bump (tallest) -->
+				<rect x="278" y="10" width="20" height="4" fill="#ffffff" />
+				<rect x="280" y="8"  width="16" height="2" fill="#ffffff" />
+				<rect x="282" y="7"  width="12" height="1" fill="#ffffff" />
+				<rect x="284" y="6"  width="8"  height="1" fill="#ffffff" />
+				<!-- Right lobe bump -->
+				<rect x="302" y="12" width="14" height="2" fill="#ffffff" />
+				<rect x="304" y="10" width="10" height="2" fill="#ffffff" />
+				<rect x="306" y="9"  width="6"  height="1" fill="#ffffff" />
+				<!-- Side fluff bumps -->
+				<rect x="246" y="18" width="2"  height="6" fill="#ffffff" />
+				<rect x="320" y="18" width="2"  height="6" fill="#ffffff" />
+				<rect x="244" y="20" width="2"  height="2" fill="#ffffff" />
+				<rect x="322" y="20" width="2"  height="2" fill="#ffffff" />
 				<!-- Underside shadow tiers -->
-				<rect x="254" y="26" width="64" height="1" fill="#d2dde5" />
-				<rect x="258" y="27" width="56" height="1" fill="#b2c3d0" />
-				<rect x="264" y="28" width="46" height="1" fill="#93a5b6" />
-				<!-- Side fluff bumps (breaks rectangular look) -->
-				<rect x="246" y="22" width="2"  height="2" fill="#ffffff" />
-				<rect x="320" y="22" width="2"  height="2" fill="#ffffff" />
-				<rect x="244" y="23" width="2"  height="1" fill="#ffffff" />
+				<rect x="250" y="26" width="68" height="1" fill="#d2dde5" />
+				<rect x="256" y="27" width="58" height="1" fill="#b2c3d0" />
+				<rect x="264" y="28" width="42" height="1" fill="#93a5b6" />
 			</g>
 
 			<!-- Cloud B: medium two-lobe, right side -->
 			<g class="drift drift-b">
-				<rect x="386" y="34" width="6"  height="1" fill="#ffffff" />
-				<rect x="404" y="36" width="8"  height="1" fill="#ffffff" />
-				<rect x="384" y="35" width="10" height="2" fill="#ffffff" />
-				<rect x="402" y="37" width="12" height="2" fill="#ffffff" />
-				<rect x="382" y="37" width="14" height="2" fill="#ffffff" />
-				<rect x="400" y="39" width="16" height="2" fill="#ffffff" />
-				<rect x="382" y="39" width="34" height="3" fill="#ffffff" />
-				<rect x="380" y="42" width="38" height="3" fill="#ffffff" />
-				<rect x="384" y="45" width="30" height="1" fill="#f2f7fa" />
-				<!-- shadow tiers -->
-				<rect x="386" y="46" width="26" height="1" fill="#c8d5df" />
-				<rect x="390" y="47" width="18" height="1" fill="#a2b3c2" />
+				<!-- Body -->
+				<rect x="378" y="40" width="44" height="6" fill="#ffffff" />
+				<!-- Left lobe bump -->
+				<rect x="382" y="38" width="14" height="2" fill="#ffffff" />
+				<rect x="384" y="36" width="10" height="2" fill="#ffffff" />
+				<rect x="386" y="35" width="6"  height="1" fill="#ffffff" />
+				<!-- Right lobe bump (smaller) -->
+				<rect x="400" y="38" width="18" height="2" fill="#ffffff" />
+				<rect x="402" y="36" width="14" height="2" fill="#ffffff" />
+				<rect x="404" y="35" width="10" height="1" fill="#ffffff" />
+				<!-- Side bumps -->
+				<rect x="376" y="42" width="2"  height="3" fill="#ffffff" />
+				<rect x="422" y="42" width="2"  height="3" fill="#ffffff" />
+				<!-- Shadow tiers -->
+				<rect x="380" y="46" width="40" height="1" fill="#c8d5df" />
+				<rect x="386" y="47" width="28" height="1" fill="#a2b3c2" />
 			</g>
 
-			<!-- Cloud C: small puff, far-right lower -->
+			<!-- Cloud C: medium puff, far-right lower (enlarged) -->
 			<g class="drift drift-c">
-				<rect x="440" y="68" width="6"  height="1" fill="#ffffff" />
-				<rect x="436" y="69" width="14" height="2" fill="#ffffff" />
-				<rect x="432" y="71" width="22" height="2" fill="#ffffff" />
-				<rect x="436" y="73" width="14" height="1" fill="#f2f7fa" />
-				<rect x="438" y="74" width="10" height="1" fill="#c8d5df" />
+				<rect x="432" y="68" width="28" height="6" fill="#ffffff" />
+				<rect x="436" y="66" width="18" height="2" fill="#ffffff" />
+				<rect x="438" y="65" width="12" height="1" fill="#ffffff" />
+				<rect x="430" y="70" width="2"  height="3" fill="#ffffff" />
+				<rect x="460" y="70" width="2"  height="3" fill="#ffffff" />
+				<rect x="434" y="74" width="24" height="1" fill="#c8d5df" />
+				<rect x="438" y="75" width="16" height="1" fill="#a2b3c2" />
 			</g>
 
-			<!-- Cloud D: small fluff, left-of-center (replaces previous wispy streak) -->
+			<!-- Cloud D: two-lobe puff, left-of-center (enlarged) -->
 			<g class="drift drift-a">
-				<rect x="148" y="86" width="4"  height="1" fill="#ffffff" />
-				<rect x="144" y="87" width="12" height="2" fill="#ffffff" />
-				<rect x="140" y="89" width="20" height="2" fill="#ffffff" />
-				<rect x="144" y="91" width="12" height="1" fill="#f2f7fa" />
-				<rect x="146" y="92" width="8"  height="1" fill="#c8d5df" />
+				<rect x="136" y="84" width="36" height="6" fill="#ffffff" />
+				<rect x="140" y="82" width="14" height="2" fill="#ffffff" />
+				<rect x="142" y="81" width="8"  height="1" fill="#ffffff" />
+				<rect x="156" y="82" width="12" height="2" fill="#ffffff" />
+				<rect x="158" y="81" width="6"  height="1" fill="#ffffff" />
+				<rect x="134" y="86" width="2"  height="3" fill="#ffffff" />
+				<rect x="172" y="86" width="2"  height="3" fill="#ffffff" />
+				<rect x="138" y="90" width="32" height="1" fill="#c8d5df" />
+				<rect x="144" y="91" width="22" height="1" fill="#a2b3c2" />
 			</g>
 
-			<!-- Cloud E: tiny tuft, upper-left -->
+			<!-- Cloud E: medium tuft, upper-left (enlarged from prior tiny) -->
 			<g class="drift drift-b">
-				<rect x="52" y="28" width="4"  height="1" fill="#ffffff" />
-				<rect x="48" y="29" width="12" height="2" fill="#ffffff" />
-				<rect x="44" y="31" width="20" height="3" fill="#ffffff" />
-				<rect x="48" y="34" width="12" height="1" fill="#f2f7fa" />
-				<rect x="50" y="35" width="8"  height="1" fill="#c8d5df" />
+				<rect x="40" y="30" width="32" height="6" fill="#ffffff" />
+				<rect x="44" y="28" width="14" height="2" fill="#ffffff" />
+				<rect x="46" y="27" width="8"  height="1" fill="#ffffff" />
+				<rect x="60" y="28" width="10" height="2" fill="#ffffff" />
+				<rect x="62" y="27" width="4"  height="1" fill="#ffffff" />
+				<rect x="38" y="32" width="2"  height="3" fill="#ffffff" />
+				<rect x="72" y="32" width="2"  height="3" fill="#ffffff" />
+				<rect x="42" y="36" width="28" height="1" fill="#c8d5df" />
+				<rect x="48" y="37" width="18" height="1" fill="#a2b3c2" />
 			</g>
 
 			<!-- ========== FOREGROUND HILL (one rolling form — Bliss-style) ==========
@@ -528,35 +531,6 @@ import RetroWindow from '../components/RetroWindow.astro';
 				<rect x="408" y="131" width="1" height="1" />
 				<rect x="434" y="133" width="2" height="1" />
 				<rect x="460" y="134" width="1" height="1" />
-			</g>
-			<!-- A subtle darker shadow row immediately below the highlight,
-			     giving the grass ridge a rim of depth instead of a flat
-			     highlight line. -->
-			<g fill="#557040">
-				<rect x="0"   y="135" width="14" height="1" />
-				<rect x="14"  y="131" width="12" height="1" />
-				<rect x="26"  y="127" width="14" height="1" />
-				<rect x="40"  y="123" width="16" height="1" />
-				<rect x="56"  y="119" width="16" height="1" />
-				<rect x="72"  y="117" width="14" height="1" />
-				<rect x="86"  y="117" width="20" height="1" />
-				<rect x="106" y="119" width="18" height="1" />
-				<rect x="124" y="122" width="18" height="1" />
-				<rect x="142" y="126" width="22" height="1" />
-				<rect x="164" y="128" width="30" height="1" />
-				<rect x="194" y="126" width="18" height="1" />
-				<rect x="212" y="123" width="18" height="1" />
-				<rect x="230" y="120" width="20" height="1" />
-				<rect x="250" y="116" width="24" height="1" />
-				<rect x="274" y="114" width="20" height="1" />
-				<rect x="294" y="116" width="20" height="1" />
-				<rect x="314" y="119" width="20" height="1" />
-				<rect x="334" y="123" width="20" height="1" />
-				<rect x="354" y="126" width="22" height="1" />
-				<rect x="376" y="130" width="22" height="1" />
-				<rect x="398" y="133" width="26" height="1" />
-				<rect x="424" y="135" width="26" height="1" />
-				<rect x="450" y="136" width="30" height="1" />
 			</g>
 
 			<!-- Distant tree silhouettes peeking above the hill ridge, for BW2 depth -->
